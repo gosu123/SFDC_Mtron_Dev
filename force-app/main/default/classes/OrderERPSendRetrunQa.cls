@@ -26,7 +26,7 @@ public with sharing class OrderERPSendRetrunQa {
 		@AuraEnabled public TransferOrder__c transferOrder {get;set;}
 		@AuraEnabled public Boolean isValidOrder {
 			get {
-				return (transferOrder.Status__c == '대상' && String.isEmpty(transferOrder.SalesDocNo__c) == true && order.Division__c == '전수배' &&
+				return (transferOrder.Status__c == '대상' && String.isEmpty(transferOrder.SalesDocNo__c) == true && order.Division__c == '전수배공급' &&
 						order.TransferProcessStatus__c == '승인' && order.AssetTransferAgreeStatus__c == '승인' && order.IsZRET__c == false)
 						? true : false;
 			}
@@ -37,7 +37,7 @@ public with sharing class OrderERPSendRetrunQa {
 				String message = '';
 				if (!isValidOrder && String.isEmpty(transferOrder.SalesDocNo__c) == false) {
 					message = 'ERP 전수배 반품 주문 신청이 완료된 건 입니다.';
-				} else if (order.Division__c != '전수배') {
+				} else if (order.Division__c != '전수배공급') {
 					message = '전수배 주문(반품)만 ERP 전송이 가능 합니다.';
 				} else if (order.TransferProcessStatus__c != '승인' && order.AssetTransferAgreeStatus__c != '승인') {
 					message = '수배 대리점의 전수배 동의와 전배 대리점의 전배 승인이 처리가 되어야 합니다. ';

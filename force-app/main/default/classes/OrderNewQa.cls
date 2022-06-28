@@ -385,7 +385,7 @@ public without sharing class OrderNewQa {
                         2021-03-11 추가.
                         주문구분 값이 전수배 일때 로직 추가.
                     */
-                    wrapperData.order.AssetTransferAgreeStatus__c = (wrapperData.order.Division__c == '전수배') ? '승인' : '';
+                    wrapperData.order.AssetTransferAgreeStatus__c = (wrapperData.order.Division__c == '전수배공급') ? '승인' : '';
 
                     // 대리점의 삭제여부가 ture일 경우 exception throw
                     if(tempAcc.Dealer__r.IsDelete__c) {
@@ -530,7 +530,7 @@ public without sharing class OrderNewQa {
     @AuraEnabled
     public static OrderNewQa.WrapperData erpSave(OrderNewQa.WrapperData wrapperData) {
 
-        if(wrapperData.order.Division__c == '전수배') {
+        if(wrapperData.order.Division__c == '전수배공급') {
             wrapperData = OrderServiceIF.OrderUpdate_ZORT(wrapperData);
         } else {
             wrapperData = OrderServiceIF.OrderUpdate_OR(wrapperData);

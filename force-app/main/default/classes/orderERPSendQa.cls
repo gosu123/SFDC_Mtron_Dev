@@ -30,7 +30,7 @@ public with sharing class orderERPSendQa {
         @AuraEnabled public Boolean isOrderSend {get;set;}
         @AuraEnabled public Boolean isTransferOrder {
             get {
-                return ( order.Division__c == '전수배' ) ? true : false;
+                return ( order.Division__c == '전수배공급' ) ? true : false;
                 // && order.Division__c == '공장주문'
             }
             set;
@@ -99,7 +99,7 @@ public with sharing class orderERPSendQa {
         if(String.isEmpty(initData.order.VSTEL__c) == false) {
             initData.defaultVSTEL = initData.order.VSTEL__c;
         } else {
-            if(initData.order.Division__c == '전수배') {
+            if(initData.order.Division__c == '전수배공급') {
                 initData.defaultVSTEL = getVSTEL(initData.order.TransferBusinessOffice__r.BusinessOfficeName__c);
             }
         }
@@ -224,5 +224,78 @@ public with sharing class orderERPSendQa {
             System.debug('------------1');
         }
     }
+
+    /**
+     * 전수배 정상 주문 처리 후 출고 주문을 생성한다.
+     *
+     * @param recordId
+     */
+/*
+    public static void setTransferOrder(String recordId) {
+        // 정상 처리 되었으면 전수배 반품 처리할 레코드를 생성 한다.
+        List<OrderLineitem__c> inputOrderLineitems = [
+                SELECT  Id,
+                        ProductId__c,
+                        ProductId__r.ProductCode,
+                        OrderId__c,
+                        OrderId__r.BusinessOffice__r.SalesGroupCode__c,
+                        OrderId__r.TransferBusinessOffice__c,
+                        OrderId__r.Name,
+                        OrderId__r.fm_SoldToErpCode__c,
+                        OrderId__r.fm_SupplyToErpCode__c,
+                        OrderId__r.TransferMachineNo__r.DealerReceiptDate__c,
+                        OrderId__r.TransferMachineNo__r.Account.CustomerType__c,
+                        OrderId__r.TransferMachineNo__r.Order__r.PriceDecisionDate__c,
+                        OrderId__r.ERP_Code__c
+                FROM OrderLineitem__c
+                WHERE OrderId__c = :recordId
+        ];
+
+        if(inputOrderLineitems.isEmpty() == false) {
+
+            OrderLineitem__c orderLineitem = inputOrderLineitems[0];
+            Order__c order = orderLineitem.OrderId__r;
+
+            TransferOrder__c tOrder = new TransferOrder__c();
+            tOrder.Order__c = order.Id;
+            tOrder.OrderLineitem__c = orderLineitem.Id;
+            tOrder.Product__c = orderLineitem.ProductId__c;
+            tOrder.TransferDealer__c = order.TransferBusinessOffice__c;
+            tOrder.Status__c = '대상';
+            tOrder.PriceDecisionDate__c = order.TransferMachineNo__r.Order__r.PriceDecisionDate__c;
+
+            String priceType = null;
+            if(order.TransferMachineNo__r.Account.CustomerType__c == '농협') {
+                priceType = 'FD';
+            } else if(order.TransferMachineNo__r.Account.CustomerType__c == '관납') {
+                priceType = 'FE';
+            } else {
+                priceType = 'FC';
+            }
+            List<ProductPriceEntry__c> productPriceEntries =  [
+                    SELECT Id, PriceType__c,
+                            BasePrice__c,
+                            StartDate__c,
+                            EndDate__c
+                    FROM ProductPriceEntry__c
+                    WHERE StartDate__c <= :order.TransferMachineNo__r.Order__r.PriceDecisionDate__c
+                    AND EndDate__c >= :order.TransferMachineNo__r.Order__r.PriceDecisionDate__c
+                    AND Product__c = :orderLineitem.ProductId__c
+                    AND PriceType__c = :priceType
+                    ORDER BY StartDate__c DESC
+                    LIMIT 1
+            ];
+
+            if(productPriceEntries.isEmpty() == false) {
+                tOrder.BaseSellingPrice__c = productPriceEntries[0].BasePrice__c;
+                tOrder.SellingPrice__c = tOrder.BaseSellingPrice__c;
+                tOrder.CorrectionPrice__c = 0;
+            }
+            //tOrder.
+            insert tOrder;
+            System.debug('------------1');
+        }
+    }
+    */
 
 }

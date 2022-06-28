@@ -27,7 +27,7 @@
                                           onsubmit="{!c.handleSubmit}"
                                           onsuccess="{!c.handleSuccess}">
                     <lightning:messages />
-                    <lightning:inputField aura:id="VSTEL" fieldName="VSTEL__c" disabled="{!equals(v.order.Division__c,'전수배')}"/>
+                    <lightning:inputField aura:id="VSTEL" fieldName="VSTEL__c" disabled="{!equals(v.order.Division__c,'전수배공급')}"/>
                     <lightning:inputField aura:id="DeliveryComment" fieldName="DeliveryComment__c" size="25"/>
                     <lightning:button class="slds-m-top_small" type="submit" label="전송" variant="brand"/>
                 </lightning:recordEditForm>

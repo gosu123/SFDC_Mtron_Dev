@@ -85,7 +85,7 @@ public without sharing class OrderAssetDeliveryQa {
                 initData.validMessage = '이미 출하 지시가 완료된 주문입니다.';
                 return initData;
             }
-            if(initData.order.Division__c == '전수배') {
+            if(initData.order.Division__c == '전수배공급') {
                 if(initData.order.TransferOrders__r.isEmpty() == true) {
                     initData.isProcess = false;
                     initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';
@@ -172,7 +172,7 @@ public without sharing class OrderAssetDeliveryQa {
             }
         }
 
-        if(initData.order.Division__c == '전수배') {
+        if(initData.order.Division__c == '전수배공급') {
             if(initData.order.TransferOrders__r.isEmpty() == false) {
                 initData.transferOrder = initData.order.TransferOrders__r[0];
             }

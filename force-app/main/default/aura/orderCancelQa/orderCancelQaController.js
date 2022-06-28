@@ -40,7 +40,7 @@
         if($A.util.isEmpty(order.SalesDocNo__c) === true) {
             helper.fn_CancelSave(component, helper);
         } else {
-            if(order.Division__c == '전수배') {
+            if(order.Division__c == '전수배공급') {
                 // 전수배 주문 ZORT, ZRET, Save
                 helper.fn_ZortToSave(component, helper);
             } else {

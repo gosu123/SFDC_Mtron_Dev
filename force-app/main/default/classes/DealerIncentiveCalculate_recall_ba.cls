@@ -38,6 +38,7 @@ public class DealerIncentiveCalculate_recall_ba implements Database.Batchable<SO
 					SELECT Id, Name,
 							AssetId__c,
 							AssetId__r.Name,
+							AssetId__r.BatchNo__c,
 							SalesDocNo__c,
 							OrderSellIn__c,
 							Dealer__c,

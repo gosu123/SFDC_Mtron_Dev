@@ -39,6 +39,7 @@ public class DealerIncentiveCalculate_transrecall_ba implements Database.Batchab
 							AssetId__c,
 							AssetId__r.FirstDeliveryDate__c,
 							AssetId__r.Name,
+							AssetId__r.BatchNo__c,
 							SalesDocNo__c,
 							SalesDocItem__c,
 							OrderSellIn__c,

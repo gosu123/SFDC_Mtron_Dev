@@ -25,7 +25,7 @@ public without sharing class LsMSalesOrderAssetTransferApproval {
 		order.TransferProcessStatus__c = status;
 		order.TransferBusinessOffice__c = assetTransferRequest.TransferDealer__c;
 		order.TransferMachineNo__c = assetTransferRequest.AssetNo__c;
-		order.Division__c = '전수배';
+		order.Division__c = '전수배공급';
 		update order;
 
 		// 해당 Asset 업데이트

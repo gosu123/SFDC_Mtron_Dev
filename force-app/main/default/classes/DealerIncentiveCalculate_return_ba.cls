@@ -38,6 +38,7 @@ public class DealerIncentiveCalculate_return_ba implements Database.Batchable<SO
 					SELECT Id, Name,
 							Asset__c,
 							Asset__r.Name,
+							Asset__r.BatchNo__c,
 							Dealer__c,
 							Dealer__r.ERPCode__c,
 							Dealer__r.IsSalesIQComplete__c,

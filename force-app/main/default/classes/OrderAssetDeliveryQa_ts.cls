@@ -16,7 +16,7 @@ private class OrderAssetDeliveryQa_ts {
         order2.PurposeOfOrder__c = '판매기회';
         orderList.add(order2);
         Order__c order3 = order2.clone(false, true);
-        order3.Division__c = '전수배';
+        order3.Division__c = '전수배공급';
         order3.Status__c = '출하';
         order3.PurposeOfOrder__c = '판매기회';
         orderList.add(order3);

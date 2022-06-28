@@ -281,7 +281,7 @@ public without sharing class DealerIncentiveCalculate_service {
 		dic.PayoutRate__c = ((dic.PayoutAmount__c / dic.SupplyAmount__c) * 100).setScale(0);
 		dic.Status__c = status;
 		if(status == '회수') dic.PayoutAmount__c = dic.PayoutAmount__c * -1;
-		dic.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + target.Name + '/' + target.Dealer__r.ERPCode__c + '/' + IncentiveType + '/' + status;
+		dic.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + target.BatchNo__c + '/' + target.Dealer__r.ERPCode__c + '/' + IncentiveType + '/' + status;
 		return dic;
 	}
 
@@ -363,7 +363,7 @@ public without sharing class DealerIncentiveCalculate_service {
 		dic.PayoutAmount__c = amountRound1000(dic.PayoutAmount__c);
 		dic.Status__c = status;
 		if(status == '회수') dic.PayoutAmount__c = dic.PayoutAmount__c * -1;
-		dic.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + target.Name + '/' + target.Account.BrokeringDealer__r.ERPCode__c + '/' + IncentiveType + '/' + status;
+		dic.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + target.BatchNo__c + '/' + target.Account.BrokeringDealer__r.ERPCode__c + '/' + IncentiveType + '/' + status;
 		return dic;
 	}
 
@@ -580,7 +580,7 @@ public without sharing class DealerIncentiveCalculate_service {
 		dic.PayoutAmount__c = amountRound1000(dic.PayoutAmount__c);
 		dic.Status__c = status;
 		if(status == '회수') dic.PayoutAmount__c = dic.PayoutAmount__c * -1;
-		dic.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + target.Asset__r.Name + '/' + target.Asset__r.Dealer__r.ERPCode__c + '/' + IncentiveType + '/' + status;
+		dic.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + target.Asset__r.BatchNo__c + '/' + target.Asset__r.Dealer__r.ERPCode__c + '/' + IncentiveType + '/' + status;
 		return dic;
 	}
 

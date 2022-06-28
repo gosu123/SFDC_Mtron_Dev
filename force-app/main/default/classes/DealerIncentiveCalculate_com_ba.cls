@@ -129,7 +129,7 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 						AND IncentiveType__c IN (
 								'Sales I.Q. 달성', '조기안착지원', '시승체험지원', '사양차액지원',
 								'특별판촉지원', '작업기지원', '과거판매장려금액',
-								'관납사후봉사', '농협사후봉사', '중개영업지원', 'PDI 등록'
+								'관납사후봉사', '농협사후봉사', '중개영업지원', 'PDI 등록', '조기판매장려'
 						) //,'PDI 등록 계획'
 						ORDER BY CalculationDate__c DESC
 				)
@@ -140,70 +140,81 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 
 		List<DealerIncentiveCalculate__c> insertDicList = new List<DealerIncentiveCalculate__c>();
 		List<DealerIncentiveCalculate__c> deleteList = new List<DealerIncentiveCalculate__c>();
+		Map<String, DealerIncentiveCalculate__c> insertDicMap = new Map<String, DealerIncentiveCalculate__c>();
 		for (Delivery__c target : scope) {
 			if(calMap.containsKey(target.AssetId__c)) {
 				Asset asset = calMap.get(target.AssetId__c);
 				if(asset.DealerIncentiveCalculates__r.isEmpty() == false) {
 					for(DealerIncentiveCalculate__c dic : asset.DealerIncentiveCalculates__r) {
+
+						System.debug(dic.Dealer__c + '/' + dic.IncentiveType__c + '/' + dic.Status__c + '/' + dic.Division__c + '/' + dic.ERPSendDate__c + '/' + dic.IsSendERP__c);
+
+						// 같은 대리점건이 아니면 대상이 아니다.
+						if(target.Dealer__c != dic.Dealer__c) continue;
+
 						if(dic.Division__c == '계획') {
 							// 미지급건
 							if (dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()) {
 								// 처리 한 달이 같으면 해당 레코드 삭제 처리.
 								deleteList.add(dic);
-							} else {
-								// 지난달은 건은 삭제 처리 하지 않는다.
+								continue;
 							}
 						} else {
 							// 지급건
 							if (dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()) {
 								// 처리 한 달이 같으면 해당 레코드 삭제 처리.
 								deleteList.add(dic);
-							} else if(dic.IsSendERP__c == false) {
-								// 달이 다르고 전송을 안한경우도 삭제 처리. : 수수료 주지 않았다.
-								deleteList.add(dic);
+								continue;
+							}
+							if(dic.IsSendERP__c == false) {
+								// 달이 다르고 전송을 안한경우도 제외처리
+//								deleteList.add(dic);
+								continue;
 							} else {
-								if(dic.Dealer__c == target.Dealer__c && dic.IsSendERP__c == true) {
-									// 대리점이 같은거에 대해서 처리.
-									returnDic = dic.clone(false, false);
-									if(dic.IncentiveType__c == '과거판매장려금액') {
-										returnDic.CalculationDate__c = processDate;
 
-										returnDic.AdSalesAmount__c          = dic.AdSalesAmount__c != null ? dic.AdSalesAmount__c * -1 : null;
-										returnDic.AdSalesRate__c            = dic.AdSalesRate__c != null ? dic.AdSalesRate__c * -1 : null;
-										returnDic.CSIncentiveAmount__c      = dic.CSIncentiveAmount__c != null ? dic.CSIncentiveAmount__c * -1 : null;
-										returnDic.CSIncentiveRate__c        = dic.CSIncentiveRate__c != null ? dic.CSIncentiveRate__c * -1 : null;
-										returnDic.SalesIncentiveAmount__c   = dic.SalesIncentiveAmount__c != null ? dic.SalesIncentiveAmount__c * -1 : null;
-										returnDic.SalesIncentiveRate__c     = dic.SalesIncentiveRate__c != null ? dic.SalesIncentiveRate__c * -1 : null;
-										returnDic.SalesDiscountAmount__c    = dic.SalesDiscountAmount__c != null ? dic.SalesDiscountAmount__c * -1 : null;
-										returnDic.SalesDiscountRate__c      = dic.SalesDiscountRate__c != null ? dic.SalesDiscountRate__c * -1 : null;
+								returnDic = dic.clone(false, false);
+								if(dic.IncentiveType__c == '과거판매장려금액') {
+									returnDic.CalculationDate__c = processDate;
 
-										returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
-										returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
-										returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
-										returnDic.Status__c = '회수';
-										returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.Name + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
-										returnDic.SalesDocNo__c = target.SalesDocNo__c;
-										returnDic.Order__c = target.OrderSellIn__c;
-										returnDic.LineNumber__c = target.SalesDocItem__c;
-										returnDic.IsSendERP__c = false;
-										returnDic.ERPSendDate__c = null;
-										returnDic.SettlementDate__c = null;
-									} else {
-										returnDic.CalculationDate__c = processDate;
-										returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
-										returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
-										returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
-										returnDic.Status__c = '회수';
-										returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.Name + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
-										returnDic.SalesDocNo__c = target.SalesDocNo__c;
-										returnDic.LineNumber__c = target.SalesDocItem__c;
-										returnDic.Order__c = target.OrderSellIn__c;
-										returnDic.IsSendERP__c = false;
-										returnDic.ERPSendDate__c = null;
-										returnDic.SettlementDate__c = null;
-									}
-									insertDicList.add(returnDic);
+									returnDic.AdSalesAmount__c          = dic.AdSalesAmount__c != null ? dic.AdSalesAmount__c * -1 : null;
+									returnDic.AdSalesRate__c            = dic.AdSalesRate__c != null ? dic.AdSalesRate__c * -1 : null;
+									returnDic.CSIncentiveAmount__c      = dic.CSIncentiveAmount__c != null ? dic.CSIncentiveAmount__c * -1 : null;
+									returnDic.CSIncentiveRate__c        = dic.CSIncentiveRate__c != null ? dic.CSIncentiveRate__c * -1 : null;
+									returnDic.SalesIncentiveAmount__c   = dic.SalesIncentiveAmount__c != null ? dic.SalesIncentiveAmount__c * -1 : null;
+									returnDic.SalesIncentiveRate__c     = dic.SalesIncentiveRate__c != null ? dic.SalesIncentiveRate__c * -1 : null;
+									returnDic.SalesDiscountAmount__c    = dic.SalesDiscountAmount__c != null ? dic.SalesDiscountAmount__c * -1 : null;
+									returnDic.SalesDiscountRate__c      = dic.SalesDiscountRate__c != null ? dic.SalesDiscountRate__c * -1 : null;
+
+									returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
+									returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
+									returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
+									returnDic.Status__c = '회수';
+									returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.BatchNo__c + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
+									returnDic.SalesDocNo__c = target.SalesDocNo__c;
+									returnDic.Order__c = target.OrderSellIn__c;
+									returnDic.LineNumber__c = target.SalesDocItem__c;
+									returnDic.IsSendERP__c = false;
+									returnDic.ERPSendDate__c = null;
+									returnDic.SettlementDate__c = null;
+								} else {
+									returnDic.CalculationDate__c = processDate;
+									returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
+									returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
+									returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
+									returnDic.Status__c = '회수';
+									returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.BatchNo__c + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
+									returnDic.SalesDocNo__c = target.SalesDocNo__c;
+									returnDic.LineNumber__c = target.SalesDocItem__c;
+									returnDic.Order__c = target.OrderSellIn__c;
+									returnDic.IsSendERP__c = false;
+									returnDic.ERPSendDate__c = null;
+									returnDic.SettlementDate__c = null;
 								}
+								// 최종 지급건에 대한 체크 처리.
+								if(insertDicMap.containsKey(returnDic.ExternalKey__c) == false) {
+									insertDicMap.put(returnDic.ExternalKey__c, returnDic);
+								}
+								//insertDicList.add(returnDic);
 							}
 						}
 					}
@@ -212,8 +223,8 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 		}
 
 		if(deleteList.isEmpty() == false) delete deleteList;
-		if(insertDicList.isEmpty() == false) {
-			upsert insertDicList DealerIncentiveCalculate__c.ExternalKey__c;
+		if(insertDicMap.isEmpty() == false) {
+			upsert insertDicMap.values() DealerIncentiveCalculate__c.ExternalKey__c;
 		}
 	}
 
@@ -265,7 +276,8 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 								SalesIncentiveAmount__c   ,
 								SalesIncentiveRate__c     ,
 								SalesDiscountAmount__c    ,
-								SalesDiscountRate__c
+								SalesDiscountRate__c	  ,
+								IsSendERP__c
 						FROM DealerIncentiveCalculates__r
 						WHERE Status__c = '지급'
 						AND IncentiveType__c IN ('Sales I.Q. 달성','조기안착지원','시승체험지원','사양차액지원',
@@ -281,24 +293,36 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 
 		List<DealerIncentiveCalculate__c> insertDicList = new List<DealerIncentiveCalculate__c>();
 		List<DealerIncentiveCalculate__c> deleteList = new List<DealerIncentiveCalculate__c>();
+		Map<String, DealerIncentiveCalculate__c> insertDicMap = new Map<String, DealerIncentiveCalculate__c>();
 		for (Delivery__c target : scope) {
 			if(calMap.containsKey(target.AssetId__c)) {
 				Asset asset = calMap.get(target.AssetId__c);
 				if(asset.DealerIncentiveCalculates__r.isEmpty() == false) {
 
 					for(DealerIncentiveCalculate__c dic : asset.DealerIncentiveCalculates__r) {
-						if (dic.IncentiveType__c == 'PDI 등록' && dic.Division__c == '계획') {
+						System.debug(dic.Dealer__c + '/' + dic.IncentiveType__c + '/' + dic.Status__c + '/' + dic.Division__c + '/' + dic.ERPSendDate__c + '/' + dic.IsSendERP__c);
+
+						// 같은 대리점건이 아니면 대상이 아니다.
+						if(target.Dealer__c != dic.Dealer__c) continue;
+
+						if(dic.Division__c == '계획') {
+							if ((dic.IncentiveType__c == 'PDI 등록' ||
+									dic.IncentiveType__c == '관납사후봉사' ||
+									dic.IncentiveType__c == '농협사후봉사' ||
+									dic.IncentiveType__c == '중개영업지원' ) &&
+									dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()
+							) {
+								deleteList.add(dic);
+								continue;
+							}
+						} else {
 							if(dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()) {
 								deleteList.add(dic);
 								continue;
-							} else {
-								continue;
 							}
-						}
-						if (dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()) {
-							// 처리 한 달이 같으면 해당 레코드 삭제 처리.
-							deleteList.add(dic);
-						} else {
+							// 실적, ERP전송한건이 대상이 된다.
+							if(dic.IsSendERP__c == false) continue;
+
 							// 다른 달이면 - 기표 처리.
 							returnDic = dic.clone(false, false);
 							if(dic.IncentiveType__c == '과거판매장려금액') {
@@ -317,35 +341,40 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 								returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
 								returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
 								returnDic.Status__c = '회수';
-								returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.Name + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
+								returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.BatchNo__c + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
 								returnDic.SalesDocNo__c = target.SalesDocNo__c;
 								returnDic.Order__c = target.OrderSellIn__c;
 								returnDic.IsSendERP__c = false;
 								returnDic.ERPSendDate__c = null;
 								returnDic.SettlementDate__c = null;
 							} else {
+								System.debug('444444444');
 								returnDic.CalculationDate__c = processDate;
 								returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
 								returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
 								returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
 								returnDic.Status__c = '회수';
-								returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.Name + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
+								returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.AssetId__r.BatchNo__c + '/' + returnDic.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
 								returnDic.SalesDocNo__c = target.SalesDocNo__c;
 								returnDic.Order__c = target.OrderSellIn__c;
 								returnDic.IsSendERP__c = false;
 								returnDic.ERPSendDate__c = null;
 								returnDic.SettlementDate__c = null;
 							}
-							insertDicList.add(returnDic);
+							// 최종 지급건에 대한 체크 처리.
+							if(insertDicMap.containsKey(returnDic.ExternalKey__c) == false) {
+								insertDicMap.put(returnDic.ExternalKey__c, returnDic);
+							}
+							//insertDicList.add(returnDic);
 						}
 					}
 				}
 			}
 		}
-
+		System.debug('deleteList : ' + deleteList.size());
 		if(deleteList.isEmpty() == false) delete deleteList;
-		if(insertDicList.isEmpty() == false) {
-			upsert insertDicList DealerIncentiveCalculate__c.ExternalKey__c;
+		if(insertDicMap.isEmpty() == false) {
+			upsert insertDicMap.values() DealerIncentiveCalculate__c.ExternalKey__c;
 		}
 	}
 
@@ -403,7 +432,7 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 								SalesIncentiveAmount__c   ,
 								SalesIncentiveRate__c     ,
 								SalesDiscountAmount__c    ,
-								SalesDiscountRate__c,
+								SalesDiscountRate__c      ,
 								IsSendERP__c
 						FROM DealerIncentiveCalculates__r
 						WHERE Status__c = '지급'
@@ -418,78 +447,113 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 		DealerIncentiveCalculate__c returnDic;
 		List<DealerIncentiveCalculate__c> insertDicList = new List<DealerIncentiveCalculate__c>();
 		List<DealerIncentiveCalculate__c> deleteList = new List<DealerIncentiveCalculate__c>();
+		Map<String, DealerIncentiveCalculate__c> insertDicMap = new Map<String, DealerIncentiveCalculate__c>();
 		for (AssetReturn__c target : scope) {
 			if(calMap.containsKey(target.Asset__c)) {
 				Asset asset = calMap.get(target.Asset__c);
 				if(asset.DealerIncentiveCalculates__r.isEmpty() == false) {
 
 					for(DealerIncentiveCalculate__c dic : asset.DealerIncentiveCalculates__r) {
-						if(dic.IncentiveType__c == '과거판매장려금액' && dic.Type__c == '대리점') {
-							// 대리점 유형일때는 과거판매장려금액은 회수 안한다.
-							// 농협인경우만 처리.
-							continue;
-						}
-						if (dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()) {
-							// 처리 한 달이 같으면 해당 레코드 삭제 처리.
-							deleteList.add(dic);
-						} else if (dic.IsSendERP__c == true) {
-							// 수수료 지급 한건.
-							if(dic.IncentiveType__c == '과거판매장려금액') {
-								returnDic = dic.clone(false, false);
-								returnDic.CalculationDate__c = processDate;
-								returnDic.AdSalesAmount__c          = dic.AdSalesAmount__c != null ? dic.AdSalesAmount__c * -1 : null;
-								returnDic.AdSalesRate__c            = dic.AdSalesRate__c != null ? dic.AdSalesRate__c * -1 : null;
-								returnDic.CSIncentiveAmount__c      = dic.CSIncentiveAmount__c != null ? dic.CSIncentiveAmount__c * -1 : null;
-								returnDic.CSIncentiveRate__c        = dic.CSIncentiveRate__c != null ? dic.CSIncentiveRate__c * -1 : null;
-								returnDic.SalesIncentiveAmount__c   = dic.SalesIncentiveAmount__c != null ? dic.SalesIncentiveAmount__c * -1 : null;
-								returnDic.SalesIncentiveRate__c     = dic.SalesIncentiveRate__c != null ? dic.SalesIncentiveRate__c * -1 : null;
-								returnDic.SalesDiscountAmount__c    = dic.SalesDiscountAmount__c != null ? dic.SalesDiscountAmount__c * -1 : null;
-								returnDic.SalesDiscountRate__c      = dic.SalesDiscountRate__c != null ? dic.SalesDiscountRate__c * -1 : null;
+						System.debug(dic.Dealer__c + '/' + dic.IncentiveType__c + '/' + dic.Status__c + '/' + dic.Division__c + '/' + dic.ERPSendDate__c + '/' + dic.IsSendERP__c);
 
-								returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
-								returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
-								returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
-								returnDic.Status__c = '회수';
-								returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.Asset__r.Name + '/' + target.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
-								returnDic.IsSendERP__c = false;
-								returnDic.ERPSendDate__c = null;
-								returnDic.SettlementDate__c = null;
-							} else {
-								// 다른 달이면 - 기표 처리.
-								returnDic = dic.clone(false, false);
-								returnDic.CalculationDate__c = processDate;
-								returnDic.SupplyAmount__c = returnDic.SupplyAmount__c * -1;
-								returnDic.PayoutRate__c = returnDic.PayoutRate__c * -1;
-								returnDic.PayoutAmount__c = returndic.PayoutAmount__c * -1;
-								returnDic.Status__c = '회수';
-								returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + dic.Asset__r.Name + '/' + dic.Dealer__r.ERPCode__c + '/' + dic.IncentiveType__c + '/' + returnDic.Status__c;
-								returnDic.IsSendERP__c = false;
-								returnDic.ERPSendDate__c = null;
-								returnDic.SettlementDate__c = null;
-								insertDicList.add(returnDic);
+						// 같은 대리점건이 아니면 대상이 아니다.
+						if(target.Dealer__c != dic.Dealer__c) continue;
 
-								if (returnDic.IncentiveType__c == 'PDI 등록' ||
-										returnDic.IncentiveType__c == '관납사후봉사' ||
-										returnDic.IncentiveType__c == '농협사후봉사' ||
-										returnDic.IncentiveType__c == '중개영업지원' )
-								{
-									returnDic = dic.clone(false, false);
-//									returnDic.IncentiveType__c = '(미지급) PDI 등록';
-									returnDic.CalculationDate__c = processDate;
-									returnDic.SupplyAmount__c = dic.SupplyAmount__c;
-									returnDic.PayoutRate__c = dic.PayoutRate__c;
-									returnDic.PayoutAmount__c = dic.PayoutAmount__c;
-									returnDic.Status__c = '지급';
-									returnDic.Division__c = '계획';
-									returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.Asset__r.Name + '/' + target.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
-									returnDic.IsSendERP__c = false;
-									returnDic.ERPSendDate__c = null;
-									returnDic.SettlementDate__c = null;
-									insertDicList.add(returnDic);
-								}
+						if(dic.Division__c == '계획') {
+							if ((dic.IncentiveType__c == 'PDI 등록' ||
+									dic.IncentiveType__c == '조기판매장려' ||
+									dic.IncentiveType__c == '관납사후봉사' ||
+									dic.IncentiveType__c == '농협사후봉사' ||
+									dic.IncentiveType__c == '중개영업지원' ) &&
+									dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()
+							) {
+								deleteList.add(dic);
+								continue;
 							}
 						} else {
-							// 지급한게 없다.
+							// 실적 건
+							if (dic.CalculationDate__c.toStartOfMonth() == processDate.toStartOfMonth()) {
+								// 처리 한 달이 같으면 해당 레코드 삭제 처리.
+								deleteList.add(dic);
+								continue;
+							} else {
+								if(dic.IncentiveType__c == '과거판매장려금액' && dic.Type__c == '대리점') {
+									// 대리점 유형일때는 과거판매장려금액은 회수 안한다.
+									// 농협인경우만 처리.
+									continue;
+								}
+
+								if (dic.IsSendERP__c == true) {
+									// 수수료 지급 한건.
+									if(dic.IncentiveType__c == '과거판매장려금액') {
+										returnDic = dic.clone(false, false);
+										returnDic.CalculationDate__c = processDate;
+										returnDic.AdSalesAmount__c          = dic.AdSalesAmount__c != null ? dic.AdSalesAmount__c * -1 : null;
+										returnDic.AdSalesRate__c            = dic.AdSalesRate__c != null ? dic.AdSalesRate__c * -1 : null;
+										returnDic.CSIncentiveAmount__c      = dic.CSIncentiveAmount__c != null ? dic.CSIncentiveAmount__c * -1 : null;
+										returnDic.CSIncentiveRate__c        = dic.CSIncentiveRate__c != null ? dic.CSIncentiveRate__c * -1 : null;
+										returnDic.SalesIncentiveAmount__c   = dic.SalesIncentiveAmount__c != null ? dic.SalesIncentiveAmount__c * -1 : null;
+										returnDic.SalesIncentiveRate__c     = dic.SalesIncentiveRate__c != null ? dic.SalesIncentiveRate__c * -1 : null;
+										returnDic.SalesDiscountAmount__c    = dic.SalesDiscountAmount__c != null ? dic.SalesDiscountAmount__c * -1 : null;
+										returnDic.SalesDiscountRate__c      = dic.SalesDiscountRate__c != null ? dic.SalesDiscountRate__c * -1 : null;
+
+										returnDic.SupplyAmount__c = dic.SupplyAmount__c * -1;
+										returnDic.PayoutRate__c = dic.PayoutRate__c * -1;
+										returnDic.PayoutAmount__c = dic.PayoutAmount__c * -1;
+										returnDic.Status__c = '회수';
+										returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.Asset__r.BatchNo__c + '/' + target.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
+										returnDic.IsSendERP__c = false;
+										returnDic.ERPSendDate__c = null;
+										returnDic.SettlementDate__c = null;
+//										insertDicList.add(returnDic);
+										// 최종 지급건에 대한 체크 처리.
+										if(insertDicMap.containsKey(returnDic.ExternalKey__c) == false) {
+											insertDicMap.put(returnDic.ExternalKey__c, returnDic);
+										}
+									} else {
+										// 다른 달이면 - 기표 처리.
+										returnDic = dic.clone(false, false);
+										returnDic.CalculationDate__c = processDate;
+										returnDic.SupplyAmount__c = returnDic.SupplyAmount__c * -1;
+										returnDic.PayoutRate__c = returnDic.PayoutRate__c * -1;
+										returnDic.PayoutAmount__c = returndic.PayoutAmount__c * -1;
+										returnDic.Status__c = '회수';
+										returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + dic.Asset__r.BatchNo__c + '/' + dic.Dealer__r.ERPCode__c + '/' + dic.IncentiveType__c + '/' + returnDic.Status__c;
+										returnDic.IsSendERP__c = false;
+										returnDic.ERPSendDate__c = null;
+										returnDic.SettlementDate__c = null;
+//										insertDicList.add(returnDic);
+										// 최종 지급건에 대한 체크 처리.
+										if(insertDicMap.containsKey(returnDic.ExternalKey__c) == false) {
+											insertDicMap.put(returnDic.ExternalKey__c, returnDic);
+										}
+
+										if (returnDic.IncentiveType__c == 'PDI 등록' ||
+												dic.IncentiveType__c == '조기판매장려' ||
+												returnDic.IncentiveType__c == '관납사후봉사' ||
+												returnDic.IncentiveType__c == '농협사후봉사' ||
+												returnDic.IncentiveType__c == '중개영업지원' )
+										{
+											returnDic = dic.clone(false, false);
+											returnDic.CalculationDate__c = processDate;
+											returnDic.SupplyAmount__c = dic.SupplyAmount__c;
+											returnDic.PayoutRate__c = dic.PayoutRate__c;
+											returnDic.PayoutAmount__c = dic.PayoutAmount__c;
+											returnDic.Status__c = '지급';
+											returnDic.Division__c = '계획';
+											returnDic.ExternalKey__c = ((Datetime) processDate).format('yyyyMM') + '/' + target.Asset__r.BatchNo__c + '/' + target.Dealer__r.ERPCode__c + '/' + returnDic.IncentiveType__c + '/' + returnDic.Status__c;
+											returnDic.IsSendERP__c = false;
+											returnDic.ERPSendDate__c = null;
+											returnDic.SettlementDate__c = null;
+//										insertDicList.add(returnDic);
+											// 최종 지급건에 대한 체크 처리.
+											if(insertDicMap.containsKey(returnDic.ExternalKey__c) == false) {
+												insertDicMap.put(returnDic.ExternalKey__c, returnDic);
+											}
+										}
+									}
+								}
+							}
 						}
 					}
 				}
@@ -497,8 +561,8 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 		}
 
 		if(deleteList.isEmpty() == false) delete deleteList;
-		if(insertDicList.isEmpty() == false) {
-			upsert insertDicList DealerIncentiveCalculate__c.ExternalKey__c;
+		if(insertDicMap.isEmpty() == false) {
+			upsert insertDicMap.values() DealerIncentiveCalculate__c.ExternalKey__c;
 		}
 	}
 

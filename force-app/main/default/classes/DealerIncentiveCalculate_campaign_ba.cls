@@ -39,6 +39,7 @@ public class DealerIncentiveCalculate_campaign_ba implements Database.Batchable<
 					SELECT Id, Name,
 							Asset__c,
 							Asset__r.Name,
+							Asset__r.BatchNo__c,
 							Asset__r.Dealer__c,
 							Asset__r.Dealer__r.ERPCode__c,
 							Asset__r.AccountId,

@@ -51,13 +51,13 @@
 
         <aura:set attribute="footer">
             <aura:if isTrue="{!v.isProcess}">
-                <aura:if isTrue="{!v.order.Division__c == '전수배'}">
+                <aura:if isTrue="{!v.order.Division__c == '전수배공급'}">
                     <lightning:button aura:id="btnTransSave" label="저장" variant="brand" onclick="{!c.doTransSave}"/>
                 </aura:if>
-                <aura:if isTrue="{!and(v.order.Division__c != '전수배', v.order.IsKeepProcess__c == false)}">
+                <aura:if isTrue="{!and(v.order.Division__c != '전수배공급', v.order.IsKeepProcess__c == false)}">
                     <lightning:button aura:id="btnSave" label="저장" variant="brand" onclick="{!c.doSave}"/>
                 </aura:if>
-                <aura:if isTrue="{!and(v.order.Division__c != '전수배', v.order.IsKeepProcess__c == true)}">
+                <aura:if isTrue="{!and(v.order.Division__c != '전수배공급', v.order.IsKeepProcess__c == true)}">
                     <lightning:button aura:id="btnSave" label="저장" variant="brand" onclick="{!c.doKeepSave}"/>
                 </aura:if>
             </aura:if>

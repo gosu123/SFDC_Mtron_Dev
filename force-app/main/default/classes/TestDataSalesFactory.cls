@@ -211,7 +211,7 @@ public class TestDataSalesFactory {
         order.RecordTypeId              = TestDataUtilFactory.getRecordTypeId('Order__c', 'PerFarCorp');
         order.SalesDocNo__c             = '123';
         order.Status__c                 = '대리점 주문 신청';
-        order.Division__c               = '전수배';
+        order.Division__c               = '전수배공급';
         order.LoanApprovalStatus__c     = '반려';
         order.DeliveryDate__c           = TestDataUtilFactory.d;
         order.OrderScheduleDate__c      = TestDataUtilFactory.d;
