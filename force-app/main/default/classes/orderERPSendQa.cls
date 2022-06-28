@@ -126,12 +126,36 @@ public with sharing class orderERPSendQa {
     public static Map<String, String> sendERP(final String recordId) {
         Map<String, String> returnMap = new Map<String, String>();
         returnMap = OrderService.IF_KR_SE_ERP_0007(recordId);
-//        returnMap.put('STATUS','Y');
         return returnMap;
     }
 
     @AuraEnabled
     public static Map<String, String> sendERPNew(final String recordId, final Boolean isTransferOrder) {
+        Map<String, String> returnMap = new Map<String, String>();
+        System.debug(isTransferOrder + '==>' + isTransferOrder);
+
+        Order__c order = [SELECT Id, SalesDocNo__c FROM Order__c WHERE Id =: recordId];
+        if(String.isEmpty(order.SalesDocNo__c) == false) {
+            throw new AuraHandledException('이미 ERP 주문 처리가 완료 되었습니다');
+        }
+
+        if(isTransferOrder == true) {
+            // 전수배 ZORT
+            returnMap = OrderService.IF_KR_SE_ERP_0007_ZORT(recordId);
+            if(returnMap.get('STATUS') == 'Y') {
+                System.debug('------------2');
+                setTransferOrder(recordId);
+            }
+        } else {
+            // 기존 OR 주문
+            returnMap = OrderService.IF_KR_SE_ERP_0007(recordId);
+        }
+        return returnMap;
+    }
+
+
+    @AuraEnabled
+    public static Map<String, String> sendZRET(final String recordId, final Boolean isTransferOrder) {
         Map<String, String> returnMap = new Map<String, String>();
         System.debug(isTransferOrder + '==>' + isTransferOrder);
 
@@ -165,34 +189,118 @@ public with sharing class orderERPSendQa {
                 SELECT  Id,
                         ProductId__c,
                         ProductId__r.ProductCode,
-                        OrderId__c,
-                        OrderId__r.BusinessOffice__r.SalesGroupCode__c,
-                        OrderId__r.TransferBusinessOffice__c,
-                        OrderId__r.Name,
-                        OrderId__r.fm_SoldToErpCode__c,
-                        OrderId__r.fm_SupplyToErpCode__c,
-                        OrderId__r.TransferMachineNo__r.DealerReceiptDate__c,
-                        OrderId__r.TransferMachineNo__r.Account.CustomerType__c,
-                        OrderId__r.TransferMachineNo__r.Order__r.PriceDecisionDate__c,
-                        OrderId__r.ERP_Code__c
+                        BaseSellingPrice__c,
+                        SellingPrice__c,
+                        CorrectionPrice__c
                 FROM OrderLineitem__c
                 WHERE OrderId__c = :recordId
+        ];
+        Order__c order = [
+                SELECT
+                        Id,
+                        Name,
+                        AccountTransferDealer__c,
+                        AssetTransferAgreeStatus__c,
+                        BusinessOffice__c,
+                        BusinessOfficeRep__c,
+                        Dealer__c,
+                        DealerRep__c,
+                        DeliverTo__c,
+                        DeliveryComment__c,
+                        DeliveryDate__c,
+                        DeliverySeq__c,
+                        Division__c,
+                        ERP_Code__c,
+                        ErpABGRU__c,
+                        ErpAPPAM_C__c,
+                        ErpAPPRV__c,
+                        ErpARRME_C__c,
+                        ErpARRRT__c,
+                        ErpBILIN_C__c,
+                        ErpBSTDK__c,
+                        ErpCMGST__c,
+                        ErpCRED_GRAD__c,
+                        ErpGUAR_AMNT_C__c,
+                        ErpINTVL0_C__c,
+                        ErpINTVL1_C__c,
+                        ErpINTVL2_C__c,
+                        ErpINTVL3_C__c,
+                        ErpINTVL4_C__c,
+                        ErpINTVL5_C__c,
+                        ErpKLIMK_C__c,
+                        ErpLAPPR__c,
+                        ErpLFDBK_T__c,
+                        ErpLNREL__c,
+                        ErpLNREQ_C__c,
+                        ErpLPLAN_T__c,
+                        ErpLRESN_T__c,
+                        ErpLVORM1__c,
+                        ErpLVORM__c,
+                        ErpMATNR__c,
+                        ErpMENGE__c,
+                        ErpNETPR_C__c,
+                        ErpNETWR_C__c,
+                        ErpPERNR__c,
+                        ErpPOSNR__c,
+                        ErpRELDT__c,
+                        ErpRQIND__c,
+                        ErpSTOCK__c,
+                        ErpSUMME_C__c,
+                        ErpUSELN_C__c,
+                        ErpUSELN_F_C__c,
+                        ErpVRKME__c,
+                        ErpWAERS__c,
+                        ErpZBESU__c,
+                        ErpZGUBUN__c,
+                        ErpZLNNO__c,
+                        ErpZLNST__c,
+                        ErpZRATE__c,
+                        ErpZRATE_F__c,
+                        ErpZTERM__c,
+                        IsAutoCancel__c,
+                        IsDummyContractOrder__c,
+                        IsInAsset__c,
+                        IsKeepProcess__c,
+                        IsMyDealerOrder__c,
+                        isOrderCancel__c,
+                        IsOutAsset__c,
+                        IsPreOrder__c,
+                        isShipmentDate__c,
+                        IsZRET__c,
+                        Opportunity__c,
+                        OrderAccount__c,
+                        OrderProduct__c,
+                        OrderScheduleDate__c,
+                        OwnerId,
+                        PODate__c,
+                        PriceDecisionDate__c,
+                        ProductId__c,
+                        PurposeOfOrder__c,
+                        RecordTypeId,
+                        ReturnAmount__c,
+                        SalesDocNo__c,
+                        ShipmentDate__c,
+                        SoldTo__c,
+                        Status__c,
+                        SupplyTo__c,
+                        SystemStatus__c,
+                        TransferBusinessOffice__c,
+                        TransferMachineNo__c,
+                        TransferMachineNo__r.Account.CustomerType__c,
+                        TransferMachineNo__r.AccountId,
+                        TransferMachineNo__r.Dealer__c,
+                        TransferMachineNo__r.Order__r.PriceDecisionDate__c,
+                        TransferProcessStatus__c,
+                        VSTEL__c
+                FROM Order__c
+                WHERE Id = :recordId
         ];
 
         if(inputOrderLineitems.isEmpty() == false) {
 
             OrderLineitem__c orderLineitem = inputOrderLineitems[0];
-            Order__c order = orderLineitem.OrderId__r;
 
-            TransferOrder__c tOrder = new TransferOrder__c();
-            tOrder.Order__c = order.Id;
-            tOrder.OrderLineitem__c = orderLineitem.Id;
-            tOrder.Product__c = orderLineitem.ProductId__c;
-            tOrder.TransferDealer__c = order.TransferBusinessOffice__c;
-            tOrder.Status__c = '대상';
-            tOrder.PriceDecisionDate__c = order.TransferMachineNo__r.Order__r.PriceDecisionDate__c;
-
-            String priceType = null;
+            String priceType;
             if(order.TransferMachineNo__r.Account.CustomerType__c == '농협') {
                 priceType = 'FD';
             } else if(order.TransferMachineNo__r.Account.CustomerType__c == '관납') {
@@ -200,6 +308,24 @@ public with sharing class orderERPSendQa {
             } else {
                 priceType = 'FC';
             }
+
+            Order__c returnOrder = order.clone(false,false);
+            returnOrder.RecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('전수배반품').getRecordTypeId();
+            returnOrder.OrderMaster__c = order.Id;      // 전수배공급주문 아이디.
+            returnOrder.Division__c = '전수배반품';             // 주문 구분
+            returnOrder.Status__c = '영업소 주문 확정';               // 상태
+            returnOrder.OrderAccount__c = order.TransferMachineNo__r.Dealer__c;
+            if(priceType != 'FC') {
+                returnOrder.OrderAccount__c = order.TransferMachineNo__r.AccountId;
+            }
+
+            insert returnOrder;
+            System.debug('===> ' + returnOrder.Id);
+
+
+            //반품 주문 아이템 레코드.
+            OrderLineitem__c returnOrderLineItem = orderLineitem.clone(false);
+
             List<ProductPriceEntry__c> productPriceEntries =  [
                     SELECT Id, PriceType__c,
                             BasePrice__c,
@@ -215,12 +341,13 @@ public with sharing class orderERPSendQa {
             ];
 
             if(productPriceEntries.isEmpty() == false) {
-                tOrder.BaseSellingPrice__c = productPriceEntries[0].BasePrice__c;
-                tOrder.SellingPrice__c = tOrder.BaseSellingPrice__c;
-                tOrder.CorrectionPrice__c = 0;
+                returnOrderLineItem.OrderId__c = returnOrder.Id;
+                returnOrderLineItem.BaseSellingPrice__c = productPriceEntries[0].BasePrice__c;
+                returnOrderLineItem.SellingPrice__c = returnOrderLineItem.BaseSellingPrice__c;
+                returnOrderLineItem.CorrectionPrice__c = 0;
             }
             //tOrder.
-            insert tOrder;
+            insert returnOrderLineItem;
             System.debug('------------1');
         }
     }
