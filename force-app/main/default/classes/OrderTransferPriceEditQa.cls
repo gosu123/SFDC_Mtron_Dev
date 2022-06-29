@@ -35,19 +35,21 @@ public without sharing class OrderTransferPriceEditQa {
 	public static I2ComClass.InitData init(final String recordId) {
 		InitData initData = new InitData();
 
-		TransferOrder__c tOrder = [
-			SELECT Id, Order__c, Order__r.OrderAccount__c, TransferDealer__r.CustomerType__c, SalesDocNo__c,
-					Product__c, Product__r.ProductCode, Product__r.Name,
-					Product__r.ListPrice__c, Product__r.DealerListPrice__c, Product__r.NhListPrice__c, Product__r.GovListPrice__c,
-					BaseSellingPrice__c, CorrectionPrice__c, SellingPrice__c,
-					TransferDealer__r.BusinessOfficeName__c, OrderLineitem__c,
-					TransferDealer__r.ERPCode__c, ERP_POSNR__c,
-					Order__r.TransferMachineNo__r.DealerReceiptDate__c,
-					Order__r.TransferMachineNo__r.Account.CustomerType__c,
-					Order__r.TransferMachineNo__r.Order__r.PriceDecisionDate__c
-			FROM TransferOrder__c
-			WHERE Id = :recordId
+		OrderLineitem__c tOrderLineItem = [
+				SELECT Id, ProductId__r.Name, ProductId__r.ProductCode, BaseSellingPrice__c, CorrectionPrice__c, SellingPrice__c,
+						OrderId__r.OrderMaster__c, OrderId__r.PriceDecisionDate__c,
+						OrderId__r.TransferMachineNo__r.Account.CustomerType__c,
+						OrderId__r.SalesDocNo__c,
+						OrderId__r.ErpPOSNR__c,
+						OrderId__r.Status__c,
+						OrderId__r.IsOutAsset__c,
+						OrderId__r.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c,
+						OrderId__r.TransferBusinessOffice__r.ERPCode__c
+				FROM OrderLineitem__c
+				WHERE OrderId__c = :recordId
 		];
+
+		Order__c tOrder = tOrderLineItem.OrderId__r;
 
 		Order__c order = [
 				SELECT Id, Name, OrderAccount__c, OrderAccount__r.CustomerType__c, PurposeOfOrder__c, Division__c, RecordType.DeveloperName, Status__c, Opportunity__c, Opportunity__r.Name,
@@ -61,30 +63,13 @@ public without sharing class OrderTransferPriceEditQa {
 						TransferMachineNo__r.Account.CustomerType__c,
 						TransferMachineNo__r.Account.ERPCode__c
 				FROM Order__c
-				WHERE Id = :tOrder.Order__c
+				WHERE Id = :tOrderLineItem.OrderId__r.OrderMaster__c
 		];
 
-		OrderLineItem__c oli = [
-				SELECT  Id,
-						ProductId__c,
-						ProductId__r.Type__c,
-						ProductId__r.Name,
-						ProductId__r.ProductCode,
-						ListPrice__c,
-						UnitPrice__c,
-						NhGovListPrice__c,
-						TransferAsset__r.Name,
-						BaseSellingPrice__c,
-						CorrectionPrice__c,
-						SellingPrice__c
-				FROM OrderLineitem__c
-				WHERE OrderId__c = :order.Id
-				LIMIT 1
-		];
 		String priceType = null;
-		if(tOrder.Order__r.TransferMachineNo__r.Account.CustomerType__c == '농협') {
+		if(tOrder.TransferMachineNo__r.Account.CustomerType__c == '농협') {
 			priceType = 'FD';
-		} else if(tOrder.Order__r.TransferMachineNo__r.Account.CustomerType__c == '관납') {
+		} else if(tOrder.TransferMachineNo__r.Account.CustomerType__c == '관납') {
 			priceType = 'FE';
 		} else {
 			priceType = 'FC';
@@ -95,29 +80,33 @@ public without sharing class OrderTransferPriceEditQa {
 						StartDate__c,
 						EndDate__c
 				FROM ProductPriceEntry__c
-				WHERE StartDate__c <= :tOrder.Order__r.TransferMachineNo__r.Order__r.PriceDecisionDate__c
-				AND EndDate__c >= :tOrder.Order__r.TransferMachineNo__r.Order__r.PriceDecisionDate__c
-				AND Product__c = :tOrder.Product__c
+				WHERE StartDate__c <= :tOrderLineItem.OrderId__r.PriceDecisionDate__c
+				AND EndDate__c >= :tOrderLineItem.OrderId__r.PriceDecisionDate__c
+				AND Product__c = :tOrderLineItem.ProductId__c
 				AND PriceType__c = :priceType
 				ORDER BY StartDate__c DESC
 				LIMIT 1
 		];
 
-		if(tOrder.SellingPrice__c == null) {
+		if(tOrderLineItem.SellingPrice__c == null) {
 			if(productPriceEntries.isEmpty() == false) {
-				tOrder.BaseSellingPrice__c = productPriceEntries[0].BasePrice__c;
-				tOrder.CorrectionPrice__c = 0;
-				tOrder.SellingPrice__c = tOrder.BaseSellingPrice__c;
+				tOrderLineItem.BaseSellingPrice__c = productPriceEntries[0].BasePrice__c;
+				tOrderLineItem.CorrectionPrice__c = 0;
+				tOrderLineItem.SellingPrice__c = tOrderLineItem.BaseSellingPrice__c;
 			}
 		}
 		initData.isProcess = false;
-		if(String.isEmpty(tOrder.SalesDocNo__c) == false && order.Status__c == '출하') {
+		if(
+				String.isEmpty(tOrder.SalesDocNo__c) == false &&
+				order.Status__c == '출하' &&
+				tOrder.IsOutAsset__c == false
+		) {
 			initData.isProcess = true;
 		}
 		ReturnOrder returnOrder = new ReturnOrder();
-		returnOrder.tOrder = tOrder;
+		returnOrder.tOrderLineItem = tOrderLineItem;
+		returnOrder.torder = tOrder;
 		returnOrder.order = order;
-		returnOrder.oli = oli;
 		initData.returnOrder = returnOrder;
 		return initData;
 	}
@@ -138,7 +127,8 @@ public without sharing class OrderTransferPriceEditQa {
 		returnMap = OrderServiceIF.OrderUpdate_ZRET(returnOrder);
 		if(returnMap.get('STATUS') == 'Y') {
 			if (returnOrder.tOrder != null) {
-				upsert returnOrder.tOrder;
+				update returnOrder.tOrderLineItem;
+				update returnOrder.tOrder;
 			}
 		}
 
@@ -147,11 +137,11 @@ public without sharing class OrderTransferPriceEditQa {
 
 	public class ReturnOrder {
 		@AuraEnabled
-		public TransferOrder__c tOrder {get;set;}
+		public OrderLineitem__c tOrderLineItem {get;set;}
+		@AuraEnabled
+		public Order__c tOrder {get;set;}
 		@AuraEnabled
 		public Order__c order {get;set;}
-		@AuraEnabled
-		public OrderLineitem__c oli {get;set;}
 	}
 
 

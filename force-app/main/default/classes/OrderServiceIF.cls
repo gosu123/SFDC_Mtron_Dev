@@ -1238,18 +1238,18 @@ public without sharing class OrderServiceIF {
 		LGORTMap.put('71F', '3717');        // 3717전남
 		LGORTMap.put('71H', '3718');        // 3718경남
 
-		String sVSTEL = VSTELMap.containsKey(returnOrder.tOrder.TransferDealer__r.BusinessOfficeName__c) ?
-				VSTELMap.get(returnOrder.tOrder.TransferDealer__r.BusinessOfficeName__c) :
+		String sVSTEL = VSTELMap.containsKey(returnOrder.tOrderLineItem.OrderId__r.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) ?
+				VSTELMap.get(returnOrder.tOrderLineItem.OrderId__r.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) :
 				'';
-		String sLGORT = LGORTMap.containsKey(returnOrder.tOrder.TransferDealer__r.BusinessOfficeName__c) ?
-				LGORTMap.get(returnOrder.tOrder.TransferDealer__r.BusinessOfficeName__c) :
+		String sLGORT = LGORTMap.containsKey(returnOrder.tOrderLineItem.OrderId__r.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) ?
+				LGORTMap.get(returnOrder.tOrderLineItem.OrderId__r.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) :
 				'';
 
 		tData = new IF_KR_SE_ERP_0007.T_DATA();
 
 		tData.OrderID           = returnOrder.tOrder.Id;
-		tData.OrderLineItemID   = returnOrder.tOrder.OrderLineitem__c;
-		tData.ProductCode       = returnOrder.tOrder.Product__r.ProductCode;
+		tData.OrderLineItemID   = returnOrder.tOrderLineItem.Id;
+		tData.ProductCode       = returnOrder.tOrderLineItem.ProductId__r.ProductCode;
 		tData.ErpVKGRP          = returnOrder.order.TransferMachineNo__r.BusinessOffice__r.SalesGroupCode__c;   //BusinessOffice__r.SalesGroupCode__c;
 		tData.ErpBSTKD          = returnOrder.order.SalesDocNo__c;
 		tData.ErpBSTDK          = String.valueOf(system.now().format('yyyyMMdd'));      // 원주문의 PO 날짜가 필요한데 값이 없다.
@@ -1258,9 +1258,9 @@ public without sharing class OrderServiceIF {
 		// 수배 대리점의 자산의 고객이 농협/관납이면 농협/관납 ERPCode__c를 보낸다.
 		// 2021/04/22
 		//
-		tData.ErpKUNNR          = returnOrder.tOrder.TransferDealer__r.ERPCode__c;
-		tData.ErpKUNNR2         = returnOrder.tOrder.TransferDealer__r.ERPCode__c;
-		tData.ErpKUNNR3         = returnOrder.tOrder.TransferDealer__r.ERPCode__c;
+		tData.ErpKUNNR          = returnOrder.tOrder.TransferBusinessOffice__r.ERPCode__c;
+		tData.ErpKUNNR2         = returnOrder.tOrder.TransferBusinessOffice__r.ERPCode__c;
+		tData.ErpKUNNR3         = returnOrder.tOrder.TransferBusinessOffice__r.ERPCode__c;
 //        order.TransferMachineNo__r.Dealer__r.ERPCode__c,
 //        order.TransferMachineNo__r.Account.ERPCode__c,
 		Set<String> checkCustomers = new Set<String>{'농협','관납'};
@@ -1287,7 +1287,7 @@ public without sharing class OrderServiceIF {
 		tData.DLTXT             = returnOrder.order.DeliveryComment__c;                                    // 출하전달사항
 		// ============================================================================================================
 
-		tData.ErpPOSNR          = returnOrder.tOrder.ERP_POSNR__c;
+		tData.ErpPOSNR          = returnOrder.tOrder.ErpPOSNR__c;
 		tData.ErpZTERM          = ' ';
 		tData.SalesDocNo        = returnOrder.tOrder.SalesDocNo__c;
 		tData.ErpCMGST          = ' ';
@@ -1296,16 +1296,16 @@ public without sharing class OrderServiceIF {
 		tData.ErpS_MESSAGE      = ' ';
 
 		// 가격 정정 정보
-		tData.NETWR1_C          = returnOrder.tOrder.BaseSellingPrice__c == null ? '' : String.valueOf(returnOrder.tOrder.BaseSellingPrice__c);  // 기준 가격
-		tData.NETWR2_C          = returnOrder.tOrder.CorrectionPrice__c == null ? '0' : String.valueOf(returnOrder.tOrder.CorrectionPrice__c);  // 가격 변경
-		tData.NETWR3_C          = returnOrder.tOrder.SellingPrice__c == null ? '' : String.valueOf(returnOrder.tOrder.SellingPrice__c);  // 공급 가격
+		tData.NETWR1_C          = returnOrder.tOrderLineItem.BaseSellingPrice__c == null ? '' : String.valueOf(returnOrder.tOrderLineItem.BaseSellingPrice__c);  // 기준 가격
+		tData.NETWR2_C          = returnOrder.tOrderLineItem.CorrectionPrice__c == null ? '0' : String.valueOf(returnOrder.tOrderLineItem.CorrectionPrice__c);  // 가격 변경
+		tData.NETWR3_C          = returnOrder.tOrderLineItem.SellingPrice__c == null ? '' : String.valueOf(returnOrder.tOrderLineItem.SellingPrice__c);  // 공급 가격
 		tData.RESERVE01         = '';   // 예비1
 		tData.RESERVE02         = '';   // 예비2
 		tData.RESERVE03         = '';   // 예비3
 		tData.RESERVE04         = '';   // 예비4
 		tData.RESERVE05         = '';   // 예비5
 
-		tData.PRSDT             = String.valueOf(((Datetime) returnOrder.tOrder.Order__r.TransferMachineNo__r.Order__r.PriceDecisionDate__c).format('yyyyMMdd')); // 가격 결정일
+		tData.PRSDT             = String.valueOf(((Datetime) returnOrder.tOrder.PriceDecisionDate__c).format('yyyyMMdd')); // 가격 결정일
 
 		// 적재
 		input.request.payload.t_data.add(tData);
