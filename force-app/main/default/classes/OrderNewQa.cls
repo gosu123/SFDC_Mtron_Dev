@@ -338,7 +338,7 @@ public without sharing class OrderNewQa {
                 if(wrapperData.isPerFarCorp) {
                     wrapperData.order.Dealer__c             = wrapperData.order.DeliverTo__c = wrapperData.order.SoldTo__c = wrapperData.order.SupplyTo__c = tempUser.AccountId;
                     wrapperData.order.DealerRep__c          = tempUser.Id;
-                    wrapperData.order.BusinessOffice__c     = tempUser.Account.ParentId;
+                    wrapperData.order.BusinessOffice__c     = tempUser.Account.BusinessOffice__c;
                     wrapperData.order.BusinessOfficeRep__c  = tempUser.Account.OwnerId;
 
                     wrapperData.order.ErpVKORG__c = '3000';

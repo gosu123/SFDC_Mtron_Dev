@@ -26,7 +26,7 @@ public without sharing class OrderAssetDeliveryQa {
     public class InitData extends I2ComClass.InitData {
         @AuraEnabled public Order__c order {get;set;}
         @AuraEnabled public List<Order__c> notiTargetOrders {get;set;}
-        @AuraEnabled public TransferOrder__c transferOrder {get;set;}
+        @AuraEnabled public Order__c transferOrder {get;set;}
         @AuraEnabled public OrderKeep__c orderKeep {get;set;}
         @AuraEnabled public Boolean isProcess {get;set;}
         @AuraEnabled public Boolean isCustomNoti {get;set;}
@@ -46,7 +46,7 @@ public without sharing class OrderAssetDeliveryQa {
                         fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
                         PurposeOfOrder__c, OrderScheduleDate__c, DeliverySeq__c, Status__c, IsInAsset__c, IsOutAsset__c,
                         (
-                            SELECT Id, SalesDocNo__c FROM TransferOrders__r LIMIT 1
+                            SELECT Id, SalesDocNo__c FROM OrderTransferReturns__r LIMIT 1
                         ),
                         (
                             SELECT Id, SalesDocNo__c, IsOutAsset__c, KeepAsset__r.Name, KeepAsset__r.BatchNo__c, KeepAsset__r.ErpLGORT__c FROM OrderKeep_Order__r LIMIT 1
@@ -86,12 +86,12 @@ public without sharing class OrderAssetDeliveryQa {
                 return initData;
             }
             if(initData.order.Division__c == '전수배공급') {
-                if(initData.order.TransferOrders__r.isEmpty() == true) {
+                if(initData.order.OrderTransferReturns__r.isEmpty() == true) {
                     initData.isProcess = false;
                     initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';
                     return initData;
                 } else {
-                    for(TransferOrder__c to : initData.order.TransferOrders__r) {
+                    for(Order__c to : initData.order.OrderTransferReturns__r) {
                         if(to.SalesDocNo__c == null) {
                             initData.isProcess = false;
                             initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';
@@ -173,8 +173,8 @@ public without sharing class OrderAssetDeliveryQa {
         }
 
         if(initData.order.Division__c == '전수배공급') {
-            if(initData.order.TransferOrders__r.isEmpty() == false) {
-                initData.transferOrder = initData.order.TransferOrders__r[0];
+            if(initData.order.OrderTransferReturns__r.isEmpty() == false) {
+                initData.transferOrder = initData.order.OrderTransferReturns__r[0];
             }
         }
         if(initData.order.OrderKeep_Order__r.isEmpty() == false) {
@@ -203,7 +203,7 @@ public without sharing class OrderAssetDeliveryQa {
      * @param deliveryRecord : 전수배 자산을 수배 대리점으로 출고
      */
     @AuraEnabled
-    public static DeliveryVO set0038In(final Order__c order, TransferOrder__c transferOrder) {
+    public static DeliveryVO set0038In(final Order__c order, Order__c transferOrder) {
         DeliveryVO vo = new DeliveryVO();
         IF_KR_SE_ERP_0038.OutputDIH ifResult = null;
 
@@ -215,7 +215,10 @@ public without sharing class OrderAssetDeliveryQa {
             ifResult = OrderService.IF_KR_SE_ERP_0038(transferOrder.SalesDocNo__c, WADAT, order.TransferMachineNo__r.BatchNo__c, null );
             if ('S'.equals(ifResult.response.header.ifResult)) {
                 vo.order.IsInAsset__c = true;
+                transferOrder.IsInAsset__c = true;
+                transferOrder.IsOutAsset__c = true;
                 update vo.order;
+                update transferOrder;
             } else {
                 vo.isSuccess = false;
                 vo.message = ifResult.response.header.ifFailMsg;

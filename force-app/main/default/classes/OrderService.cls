@@ -930,8 +930,11 @@ public with sharing class OrderService {
                     tmpOrder.ErpS_MESSAGE__c    = temp.ErpS_MESSAGE;
                     tmpOrder.ErpPOSNR__c        = temp.ErpPOSNR;
 
-
-                    if (temp.ErpCMGST == 'B' && tmpOrder.RecordType.Name != '관납/농협') {
+                    if (temp.ErpCMGST == 'B') {
+                        /**
+                         * 농협/관납 이라도 여신이 걸릴수 있으므로 'B'이면 무조건 본사 여신 검토 로 처리 한다.
+                         * ITVOC-2022-06-0862
+                        */
                         tmpOrder.Status__c = '본사 여신 검토';
                         tmpOrder.SystemStatus__c = '본사 여신 검토';    // 파트너 커뮤니티 사용자가 임의로 상태 변경하는 것을 방지하는 목적
                     } else if (String.isEmpty(temp.ErpCMGST) || temp.ErpCMGST == 'A' || temp.ErpCMGST == 'D') {
@@ -1034,20 +1037,38 @@ public with sharing class OrderService {
                                 TransferDealer__r.BusinessOfficeName__c,
                                 Product__r.ProductCode
                         FROM TransferOrders__r LIMIT 1)
-                FROM Order__c WHERE Id =: recordId
+                FROM Order__c WHERE Id = :recordId
+        ];
+        List<Order__c> transferOrders = [
+                SELECT Id, OrderProduct__r.ProductCode, OrderScheduleDate__c, SalesDocNo__c, PriceDecisionDate__c,
+                        TransferMachineNo__r.BatchNo__c,
+                        TransferBusinessOffice__r.ERPCode__c,
+                        TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c
+                FROM Order__c
+                WHERE OrderMaster__c = :recordId
+                LIMIT 1
+        ];
+
+        List<OrderLineitem__c> transferOrderItems = [
+                SELECT Id
+                FROM OrderLineitem__c
+                WHERE OrderId__c = :recordId
+                LIMIT 1
         ];
 
         System.debug(JSON.serializePretty(order));
-        TransferOrder__c transferOrder = null;
-        if(order.TransferOrders__r != null && order.TransferOrders__r.size() > 0) {
-            transferOrder = order.TransferOrders__r[0];
+        Order__c transferOrder = null;
+        OrderLineitem__c transferOrderItem = null;
+        if(transferOrders != null && transferOrders.size() > 0) {
+            transferOrder = transferOrders[0];
+            transferOrderItem = transferOrderItems[0];
         }
         if(transferOrder == null) {
             returnMap.put('STATUS', 'N');
             returnMap.put('MESSAGE', '반품 주문 정보가 없습니다. ERP주문을 먼저 처리 해주세요.');
             return returnMap;
         }
-        if(order.TransferMachineNo__r.Order__r.PriceDecisionDate__c == null) {
+        if(transferOrder.PriceDecisionDate__c == null) {
             returnMap.put('STATUS', 'N');
             returnMap.put('MESSAGE', '이전 주문의 가격결정일자 정보를 찾을 수 없습니다. 관리자에게 문의하시기 바랍니다.');
             return returnMap;
@@ -1057,46 +1078,6 @@ public with sharing class OrderService {
         IF_KR_SE_ERP_0007.InputDIH  input = new IF_KR_SE_ERP_0007.InputDIH();
         IF_KR_SE_ERP_0007.T_DATA    tData;
         IF_KR_SE_ERP_0007.OutputDIH result;
-
-
-        /*
-        (In : 데이터 채울 것) (Out : 전송시 스페이스 한자리, 수신하여 값 저장)(* 수신 필수)
-        -------------------------------------------------------------------- 전송
-        ( In ) OrderLineItemID  세일즈포스 주문 제품ID
-        ( In ) ProductCode      제품코드
-        ( In ) OrderID          세일즈포스 채번 주문ID
-        ( In ) ErpVKGRP         영업그룹
-        ( In ) ErpBSTKD         PO 번호(= Order__c.Name)
-        ( In ) ErpBSTDK         PO 일자(= ERP 주문 생성 당일, yyyyMMdd)
-        ( In ) ErpKUNNR         판매처
-        ( In ) ErpKUNNR2        지급처
-        ( In ) ErpKUNNR3        납품처
-
-// ZRET 인 경우는 ZORT 주문 정보값을 해야 한다.
-        ( In ) ErpBSTKD         PO 번호(= Order__c.SalesDocNo__c)
-        ( In ) ErpBSTDK         PO 일자(= ERP 주문 생성 당일, yyyyMMdd)
-
-        ( In ) Quanitity        주문수량(=1)
-        ( In ) ErpZFLAG         주문Flag(Create: C 설정)
-        ( In ) ErpAUART         영업문서 유형(OR)
-        ( In ) ErpVKORG         영업조직(3000)
-        ( In ) ErpVTWEG         유통경로(10)
-        ( In ) ErpSPART         제품군(71)
-        ( In ) ErpVKBUR         영업팀(5600)
-
-        -------------------------------------------------------------------- 수신
-        [Order__c]
-        (*Out) ErpZTERM__c  지급조건(* 전송시 스페이스 한자리, ERP 회신되는 값, Order__c에 저장)
-        (*Out) SalesDocNo__c  판매문서번호(* 전송시 스페이스 한자리, 수신하여 값 저장)
-        (*Out) ErpCMGST__c  ERP 여신상태(* 전송시 스페이스 한자리, 수신하여 값 저장)
-        ( Out) ErpABGRU__c  ERP 거부사유(* 전송시 스페이스 한자리, 수신하여 값 저장)
-        (*Out) ErpS_RESULT__c  ERP 처리결과(* 전송시 스페이스 한자리, 수신하여 값 저장)
-        ( Out) ErpS_MESSAGE__c  ERP 메시지(* 전송시 N스페이스 한자리ull, 수신하여 값 저장)
-        (*Out) ErpPOSNR__c  판매문서품목번호(* 전송시 스페이스 한자리, 수신하여 값 저장)
-
-        [OrderLineItem__c]
-        ( Out) ErpPOSNR__c : 판매문서품목번호 : (* 전송시 스페이스 한자리, 수신하여 OrderLineItem__c 값 저장)
-        */
 
         /**
             AUART 영업문서 유형 : OR 일반내수판매, ZORT 전수배출고, ZRET 전수배반품
@@ -1125,31 +1106,31 @@ public with sharing class OrderService {
         LGORTMap.put('71F', '3717');        // 3717전남
         LGORTMap.put('71H', '3718');        // 3718경남
 
-        String sVSTEL = VSTELMap.containsKey(transferOrder.TransferDealer__r.BusinessOfficeName__c) ?
-                            VSTELMap.get(transferOrder.TransferDealer__r.BusinessOfficeName__c) :
+        String sVSTEL = VSTELMap.containsKey(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) ?
+                            VSTELMap.get(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) :
                             '';
-        String sLGORT = LGORTMap.containsKey(transferOrder.TransferDealer__r.BusinessOfficeName__c) ?
-                            LGORTMap.get(transferOrder.TransferDealer__r.BusinessOfficeName__c) :
+        String sLGORT = LGORTMap.containsKey(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) ?
+                            LGORTMap.get(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) :
                             '';
 
         tData = new IF_KR_SE_ERP_0007.T_DATA();
 
         tData.OrderID           = transferOrder.Id;
-        tData.OrderLineItemID   = transferOrder.OrderLineitem__c;
-        tData.ProductCode       = transferOrder.Product__r.ProductCode;
+        tData.OrderLineItemID   = transferOrderItem.Id;
+        tData.ProductCode       = transferOrder.OrderProduct__r.ProductCode;
         tData.ErpVKGRP          = order.TransferMachineNo__r.BusinessOffice__r.SalesGroupCode__c;   //BusinessOffice__r.SalesGroupCode__c;
         tData.ErpBSTKD          = order.SalesDocNo__c;
 
-        Date orgPoDate          = order.TransferMachineNo__r.Order__r.PriceDecisionDate__c;
+        Date orgPoDate          = transferOrder.PriceDecisionDate__c;
         tData.ErpBSTDK          = String.valueOf(((Datetime) orgPoDate).format('yyyyMMdd'));      // 원주문의 PO 날짜
 
     // 수배 대리점의 ERP Code를 지정 해야 한다.
         // 수배 대리점의 자산의 고객이 농협/관납이면 농협/관납 ERPCode__c를 보낸다.
         // 2021/04/22
         //
-        tData.ErpKUNNR          = transferOrder.TransferDealer__r.ERPCode__c;
-        tData.ErpKUNNR2         = transferOrder.TransferDealer__r.ERPCode__c;
-        tData.ErpKUNNR3         = transferOrder.TransferDealer__r.ERPCode__c;
+        tData.ErpKUNNR          = transferOrder.TransferBusinessOffice__r.ERPCode__c;
+        tData.ErpKUNNR2         = transferOrder.TransferBusinessOffice__r.ERPCode__c;
+        tData.ErpKUNNR3         = transferOrder.TransferBusinessOffice__r.ERPCode__c;
 //        order.TransferMachineNo__r.Dealer__r.ERPCode__c,
 //        order.TransferMachineNo__r.Account.ERPCode__c,
         Set<String> checkCustomers = new Set<String>{'농협','관납'};
@@ -1159,9 +1140,10 @@ public with sharing class OrderService {
             tData.ErpKUNNR3         = order.TransferMachineNo__r.Account.ERPCode__c;
         }
         // 2021-07-26 수정 ============================================================================================
+        // 원주문의 납품요청일자 지정
         String sKEDAT = Datetime.now().format('yyyyMMdd');
-        if(transferOrder.OrderLineitem__r.OrderId__r.OrderScheduleDate__c != null) {
-            sKEDAT = ((Datetime)transferOrder.OrderLineitem__r.OrderId__r.OrderScheduleDate__c).format('yyyyMMdd');
+        if(order.OrderScheduleDate__c != null) {
+            sKEDAT = ((Datetime)order.OrderScheduleDate__c).format('yyyyMMdd');
         }
         tData.KEDAT             = sKEDAT;       // 납품요청월
         tData.DLTXT             = ' ';                                    // 출하전달사항
@@ -1176,7 +1158,7 @@ public with sharing class OrderService {
         tData.ErpSPART          = '71';
         tData.ErpVKBUR          = '5600';
 
-        tData.CHARG             = order.TransferMachineNo__r.BatchNo__c;        // 배치 번호
+        tData.CHARG             = transferOrder.TransferMachineNo__r.BatchNo__c;        // 배치 번호
 
         tData.VSTEL             = sVSTEL;
         tData.LGORT             = sLGORT;
@@ -1199,7 +1181,7 @@ public with sharing class OrderService {
         tData.RESERVE04         = '';  // 예비4
         tData.RESERVE05         = '';  // 예비5
 
-        tData.PRSDT             = String.valueOf(((Datetime) order.TransferMachineNo__r.Order__r.PriceDecisionDate__c).format('yyyyMMdd')); // 가격 결정일
+        tData.PRSDT             = String.valueOf(((Datetime) transferOrder.PriceDecisionDate__c).format('yyyyMMdd')); // 가격 결정일
 
         // 적재
         input.request.payload.t_data.add(tData);
@@ -1211,7 +1193,6 @@ public with sharing class OrderService {
             //IF_Base.crashTest = true;
             result = instance.execute(input);
         }
-
 
         System.debug('결과.----------------------');
         System.debug(JSON.serialize(result));
@@ -1232,16 +1213,20 @@ public with sharing class OrderService {
                 System.debug('ErpPOSNR__c = ' + temp.ErpPOSNR );
                 if(String.isBlank(temp.SalesDocNo)) {
                     returnMap.put('STATUS', 'N');
-                    returnMap.put('MESSAGE', '[반품주문오류(ZRET)] 반품주문번호가 없습니다. '+ temp.ErpS_MESSAGE);
+                    returnMap.put('MESSAGE', temp.ErpS_MESSAGE);
                     return returnMap;
                 }
 
-                transferOrder.SalesDocNo__c = temp.SalesDocNo;
-                transferOrder.ERP_ABGRU__c = temp.ErpABGRU;
-                transferOrder.ERP_MESSAGE__c = temp.ErpS_MESSAGE;
-                transferOrder.ERP_RESULT__c = temp.ErpS_RESULT;
-                transferOrder.ERP_POSNR__c = temp.ErpPOSNR;
-                transferOrder.Status__c = '완료';
+                transferOrder.ErpZTERM__c        = temp.ErpZTERM;
+                transferOrder.SalesDocNo__c      = temp.SalesDocNo;
+                transferOrder.ErpCMGST__c        = String.isEmpty(temp.ErpCMGST) ? 'A' : temp.ErpCMGST;
+                transferOrder.ErpABGRU__c        = temp.ErpABGRU;
+                transferOrder.ErpS_RESULT__c     = temp.ErpS_RESULT;
+                transferOrder.ErpS_MESSAGE__c    = temp.ErpS_MESSAGE;
+                transferOrder.ErpPOSNR__c        = temp.ErpPOSNR;
+                transferOrder.Status__c          = '출하';
+                transferOrder.SystemStatus__c    = '출하';
+                transferOrder.IsZRET__c          = true;
 
                 order.IsZRET__c = true;     // 반품 처리 완료.
             }
@@ -1252,8 +1237,8 @@ public with sharing class OrderService {
             returnMap.put('STATUS', 'N');
             returnMap.put('MESSAGE', 'ERP 주문 생성 오류 : ' + result.response.header.ifFailMsg);
 
-            transferOrder.ERP_MESSAGE__c = '99';
-            transferOrder.ERP_RESULT__c = 'ERP 주문 생성 오류 : ' + result.response.header.ifFailMsg;
+            transferOrder.ErpS_MESSAGE__c = '99';
+            transferOrder.ErpS_RESULT__c = 'ERP 주문 생성 오류 : ' + result.response.header.ifFailMsg;
             System.debug('I/F 오류 ========================');
         }
         update transferOrder;

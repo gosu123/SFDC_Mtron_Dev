@@ -17,7 +17,7 @@
     <c:lacComQuickAction title="ERP 주문(반품) 전송" aura:id="quickAction" hasSelfFooter="{!false}" isSmall="{!true}">
         <aura:if isTrue="{!v.isValidOrder}">
             <div class="slds-m-around_x-large slds-text-align_center">
-                반품 주문 전송을 진행 하시겠습니까?
+                전수배 반품 주문 전송을 진행 하시겠습니까?
             </div>
             <aura:set attribute="else">
                 <div class="slds-m-around_x-large slds-text-align_center">

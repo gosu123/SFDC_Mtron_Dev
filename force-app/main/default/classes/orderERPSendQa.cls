@@ -82,7 +82,7 @@ public with sharing class orderERPSendQa {
         initData.defaultVSTEL = 'M620';
         initData.isOrderSend = false;
         initData.order = [
-                SELECT Id, VSTEL__c, Division__c, TransferBusinessOffice__r.BusinessOfficeName__c,
+                SELECT Id, VSTEL__c, Division__c, TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c,
                         AssetTransferAgreeStatus__c, TransferProcessStatus__c, SalesDocNo__c, Status__c, BusinessOffice__r.BusinessOfficeName__c
                 FROM Order__c WHERE Id =: recordId
         ];
@@ -100,7 +100,7 @@ public with sharing class orderERPSendQa {
             initData.defaultVSTEL = initData.order.VSTEL__c;
         } else {
             if(initData.order.Division__c == '전수배공급') {
-                initData.defaultVSTEL = getVSTEL(initData.order.TransferBusinessOffice__r.BusinessOfficeName__c);
+                initData.defaultVSTEL = getVSTEL(initData.order.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c);
             }
         }
         return initData;
@@ -290,6 +290,12 @@ public with sharing class orderERPSendQa {
                         TransferMachineNo__r.AccountId,
                         TransferMachineNo__r.Dealer__c,
                         TransferMachineNo__r.Order__r.PriceDecisionDate__c,
+                        TransferMachineNo__r.Order__r.Dealer__c,
+                        TransferMachineNo__r.Order__r.DealerRep__c,
+                        TransferMachineNo__r.Order__r.BusinessOffice__c,
+                        TransferMachineNo__r.Order__r.BusinessOfficeRep__c,
+                        TransferMachineNo__r.Order__r.BusinessOffice__r.ERPCode__c,
+                        TransferMachineNo__r.Order__r.Dealer__r.BusinessOffice__r.ERPCode__c,
                         TransferProcessStatus__c,
                         VSTEL__c
                 FROM Order__c
@@ -311,13 +317,30 @@ public with sharing class orderERPSendQa {
 
             Order__c returnOrder = order.clone(false,false);
             returnOrder.RecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('전수배반품').getRecordTypeId();
+            returnOrder.ErpAUART__c = 'ZRET';           // 전수배 반품 주문
+            returnOrder.SalesDocNo__c = null;
+            returnOrder.ErpPOSNR__c = null;
             returnOrder.OrderMaster__c = order.Id;      // 전수배공급주문 아이디.
-            returnOrder.Division__c = '전수배반품';             // 주문 구분
-            returnOrder.Status__c = '영업소 주문 확정';               // 상태
+            returnOrder.Division__c = '전수배반품';       // 주문 구분
+            returnOrder.Status__c = '영업소 주문 확정';    // 상태
             returnOrder.OrderAccount__c = order.TransferMachineNo__r.Dealer__c;
+            // 전배 기대의 주문의 가격결정일을 등록 해준다.
+            returnOrder.PriceDecisionDate__c = order.TransferMachineNo__r.Order__r.PriceDecisionDate__c;
             if(priceType != 'FC') {
                 returnOrder.OrderAccount__c = order.TransferMachineNo__r.AccountId;
             }
+
+            // 전수배 기대의 원 주문의 영업소 정보를 채워 준다.
+            returnOrder.Dealer__c = order.TransferMachineNo__r.Order__r.Dealer__c;
+            returnOrder.DealerRep__c = order.TransferMachineNo__r.Order__r.DealerRep__c;
+            returnOrder.BusinessOffice__c = order.TransferMachineNo__r.Order__r.BusinessOffice__c;
+            returnOrder.BusinessOfficeRep__c = order.TransferMachineNo__r.Order__r.BusinessOfficeRep__c;
+
+            // 출하위치 : 전배 대리점의 영업소 코드
+            returnOrder.VSTEL__c = order.TransferMachineNo__r.Order__r.Dealer__r.BusinessOffice__r.ERPCode__c;
+
+            // ErpCMGST__c : ERP 여신상태도 초기화 한다.
+            returnOrder.ErpCMGST__c = null;
 
             insert returnOrder;
             System.debug('===> ' + returnOrder.Id);

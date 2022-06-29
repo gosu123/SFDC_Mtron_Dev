@@ -22,34 +22,9 @@ public with sharing class OrderERPSendRetrunQa {
 	 * 초기 거래 데이터
 	 */
 	public class InitData extends I2ComClass.InitData {
-		@AuraEnabled public Order__c order {get;set;}
-		@AuraEnabled public TransferOrder__c transferOrder {get;set;}
-		@AuraEnabled public Boolean isValidOrder {
-			get {
-				return (transferOrder.Status__c == '대상' && String.isEmpty(transferOrder.SalesDocNo__c) == true && order.Division__c == '전수배공급' &&
-						order.TransferProcessStatus__c == '승인' && order.AssetTransferAgreeStatus__c == '승인' && order.IsZRET__c == false)
-						? true : false;
-			}
-			set;
-		}
-		@AuraEnabled public String validMessage {
-			get {
-				String message = '';
-				if (!isValidOrder && String.isEmpty(transferOrder.SalesDocNo__c) == false) {
-					message = 'ERP 전수배 반품 주문 신청이 완료된 건 입니다.';
-				} else if (order.Division__c != '전수배공급') {
-					message = '전수배 주문(반품)만 ERP 전송이 가능 합니다.';
-				} else if (order.TransferProcessStatus__c != '승인' && order.AssetTransferAgreeStatus__c != '승인') {
-					message = '수배 대리점의 전수배 동의와 전배 대리점의 전배 승인이 처리가 되어야 합니다. ';
-				} else if (order.IsZRET__c == true) {
-					message = '이미 ERP 반품 주문 신청이 처리 되었습니다.';
-				} else {
-					message = 'ERP 반품 주문 처리 상태가 아닙니다. 먼저 ERP 주문을 진행해주세요.';
-				}
-				return message;
-			}
-			set;
-		}
+		@AuraEnabled public Order__c transferOrder {get;set;}
+		@AuraEnabled public Boolean isValidOrder {get;set;}
+		@AuraEnabled public String validMessage {get;set;}
 	}
 
 	/**
@@ -62,15 +37,44 @@ public with sharing class OrderERPSendRetrunQa {
 	@AuraEnabled(Cacheable=true)
 	public static InitData init(final String recordId) {
 		InitData initData = new InitData();
-		initData.transferOrder = new TransferOrder__c();
-		initData.order = [
-				SELECT Id, Division__c, SalesDocNo__c, Status__c, IsZRET__c, TransferProcessStatus__c, AssetTransferAgreeStatus__c,
-				(SELECT Id, SalesDocNo__c, Status__c FROM TransferOrders__r LIMIT 1)
+		initData.transferOrder = [
+				SELECT Id, Division__c, SalesDocNo__c, Status__c,
+						OrderMaster__r.SalesDocNo__c,
+						OrderMaster__r.Status__c,
+						OrderMaster__r.IsZRET__c,
+						OrderMaster__r.Division__c,
+						OrderMaster__r.TransferProcessStatus__c,
+						OrderMaster__r.AssetTransferAgreeStatus__c
 				FROM Order__c WHERE Id =: recordId
 		];
-		if(initData.order.TransferOrders__r != null && initData.order.TransferOrders__r.size() > 0) {
-			initData.transferOrder = initData.order.TransferOrders__r[0];
+
+
+		initData.isValidOrder = (
+				initData.transferOrder.Status__c == '영업소 주문 확정' &&
+				initData.transferOrder.OrderMaster__r.Status__c == '출하' &&
+				String.isEmpty(initData.transferOrder.SalesDocNo__c) == true &&
+				initData.transferOrder.OrderMaster__r.Division__c == '전수배공급' &&
+				String.isEmpty(initData.transferOrder.OrderMaster__r.SalesDocNo__c) == false &&
+				initData.transferOrder.OrderMaster__r.TransferProcessStatus__c == '승인' &&
+				initData.transferOrder.OrderMaster__r.AssetTransferAgreeStatus__c == '승인' &&
+				initData.transferOrder.OrderMaster__r.IsZRET__c == false)
+				? true : false;
+
+		initData.validMessage = '';
+		if (!initData.isValidOrder && String.isEmpty(initData.transferOrder.SalesDocNo__c) == false) {
+			initData.validMessage  = 'ERP 전수배 반품 주문 신청이 완료된 건 입니다.';
+		} else if (initData.transferOrder.OrderMaster__r.Division__c != '전수배공급') {
+			initData.validMessage  = '전수배 주문(반품)만 ERP 전송이 가능 합니다.';
+		} else if (initData.transferOrder.Status__c != '영업소 주문 확정') {
+			initData.validMessage  = '전수배 주문(반품)은 영업소 주문 확정 상태에서만 전송이 가능 합니다.';
+		} else if (initData.transferOrder.OrderMaster__r.TransferProcessStatus__c != '승인' && initData.transferOrder.OrderMaster__r.AssetTransferAgreeStatus__c != '승인') {
+			initData.validMessage  = '수배 대리점의 전수배 동의와 전배 대리점의 전배 승인이 처리가 되어야 합니다. ';
+		} else if (initData.transferOrder.OrderMaster__r.IsZRET__c == true) {
+			initData.validMessage  = '이미 ERP 반품 주문 신청이 처리 되었습니다.';
+		} else {
+			initData.validMessage  = '전수배 공급 주문의 상태가 [출하 대기]일 때, 전수배 반품 주문의 SAP 전송이 가능합니다.';
 		}
+
 		return initData;
 	}
 
@@ -80,21 +84,16 @@ public with sharing class OrderERPSendRetrunQa {
 	 * @param recordId : Order__c 의 RecordId
 	 */
 	@AuraEnabled
-	public static Map<String, String> sendERP(final String recordId, final Boolean isTransferOrder) {
-		Order__c order = [
-				SELECT Id, Division__c, SalesDocNo__c, Status__c, IsZRET__c, TransferProcessStatus__c, AssetTransferAgreeStatus__c,
-				(SELECT Id, SalesDocNo__c, Status__c FROM TransferOrders__r LIMIT 1)
+	public static Map<String, String> sendERP(final String recordId) {
+		Map<String, String> returnMap = new Map<String, String>();
+		Order__c transferOrder = [
+				SELECT Id, Division__c, SalesDocNo__c, OrderMaster__c
 				FROM Order__c WHERE Id =: recordId
 		];
-		if(order.TransferOrders__r.isEmpty() == false) {
-			for(TransferOrder__c r : order.TransferOrders__r) {
-				if(String.isNotEmpty(r.SalesDocNo__c)) {
-					throw new AuraHandledException('이미 반품 주문이 처리되었습니다.');
-				}
-			}
+		if(String.isNotEmpty(transferOrder.SalesDocNo__c)) {
+			throw new AuraHandledException('이미 반품 주문이 처리되었습니다.');
 		}
-		Map<String, String> returnMap = new Map<String, String>();
-		returnMap = OrderService.IF_KR_SE_ERP_0007_ZRET(recordId);
+		returnMap = OrderService.IF_KR_SE_ERP_0007_ZRET(transferOrder.OrderMaster__c);
 		return returnMap;
 	}
 
