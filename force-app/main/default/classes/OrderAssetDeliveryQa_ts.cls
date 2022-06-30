@@ -40,6 +40,7 @@ private class OrderAssetDeliveryQa_ts {
 
         insert orderList;
 
+        //@TODO : 전수배반품주문
         TransferOrder__c to = new TransferOrder__c(SalesDocNo__c = '1234', Order__c = order.Id);
         insert to;
         TransferOrder__c to2 = new TransferOrder__c(SalesDocNo__c = null, Order__c = order4.Id);
@@ -71,13 +72,13 @@ private class OrderAssetDeliveryQa_ts {
                         fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c,
                         PurposeOfOrder__c, OrderScheduleDate__c, DeliverySeq__c, Status__c, IsInAsset__c, IsOutAsset__c,
                 (
-                        SELECT Id, SalesDocNo__c FROM TransferOrders__r LIMIT 1
+                        SELECT Id, SalesDocNo__c FROM OrderTransferReturns__r LIMIT 1
                 )
                 FROM Order__c WHERE Id =: order.Id AND SalesDocNo__c != NULL];
 
         List<Order__c> notiTargetOrders = new List<Order__c>();
 
-        OrderAssetDeliveryQa.set0038In(testorder, testorder.TransferOrders__r[0]);
+        OrderAssetDeliveryQa.set0038In(testorder, testorder.OrderTransferReturns__r[0]);
         OrderAssetDeliveryQa.set0038Out(order2);
         OrderAssetDeliveryQa.set0038OutNormal(order2, new List<Order__c>{order2});
         OrderAssetDeliveryQa.sendNoti(order2, new List<Order__c>{order2});

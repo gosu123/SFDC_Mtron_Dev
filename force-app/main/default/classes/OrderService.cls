@@ -1052,7 +1052,7 @@ public with sharing class OrderService {
         List<OrderLineitem__c> transferOrderItems = [
                 SELECT Id
                 FROM OrderLineitem__c
-                WHERE OrderId__c = :recordId
+                WHERE OrderId__r.OrderMaster__c = :recordId
                 LIMIT 1
         ];
 

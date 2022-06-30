@@ -127,6 +127,7 @@ public without sharing class OrderAssetDeliveryQa {
                         fm_RecordTypeOrder__c, fm_OrderScheduleYearMonth__c,  fm_IsPreOrder__c,   fm_OrderPurposeOrder__c,   OrderScheduleDate__c,  CreatedDate
                 FROM Order__c
                 WHERE Status__c != '종료'
+                AND Division__c != '전수배반품'
                 AND isOrderCancel__c = FALSE
                 AND IsOutAsset__c = FALSE
                 AND VSTEL__c IN ('', 'M620')

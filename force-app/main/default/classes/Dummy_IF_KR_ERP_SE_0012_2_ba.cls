@@ -209,12 +209,13 @@ public class Dummy_IF_KR_ERP_SE_0012_2_ba extends Dummy_IF_Batch {
 			orderKeepMap.put(order.Order__r.SalesDocNo__c, order);
 		}
 
-		Map<String, TransferOrder__c> transperOrder_Target = new Map<String, TransferOrder__c>();
-		for(TransferOrder__c r : [
-				SELECT Id, SalesDocNo__c, Order__c, Order__r.TransferBusinessOffice__c, Order__r.TransferBusinessOffice__r.BusinessOffice__c
-				FROM TransferOrder__c
+		Map<String, Order__c> transperOrder_Target = new Map<String, Order__c>();
+		for(Order__c r : [
+				SELECT Id, SalesDocNo__c, OrderMaster__c
+				FROM Order__c
 				WHERE SalesDocNo__c IN :order_Set
 		]) {
+			//, Order__r.TransferBusinessOffice__c, Order__r.TransferBusinessOffice__r.BusinessOffice__c
 			transperOrder_Target.put(r.SalesDocNo__c, r);
 		}
 
@@ -252,6 +253,7 @@ public class Dummy_IF_KR_ERP_SE_0012_2_ba extends Dummy_IF_Batch {
 		Asset tmpAsset;
 		// Update용 Order__c
 		Order__c tmpOrder;
+		Order__c tmpOrderReturn;	// 전수배반품 주문
 
 		Account tmpDeliveryAccount;
 
@@ -437,6 +439,15 @@ public class Dummy_IF_KR_ERP_SE_0012_2_ba extends Dummy_IF_Batch {
 					updateOrderKeepMap.put(target.SalesDocNo__c, orderKeep);
 				}
 			} else {
+				if (transperOrder_Target.containsKey(target.SalesDocNo__c)) {
+					System.debug('-----------');
+					// 전수배 반품건 처리.
+					tmpOrderReturn = transperOrder_Target.get(target.SalesDocNo__c);
+					tmpOrderReturn.Status__c = '종료'; // Status__c : 고정값
+					tmpOrderReturn.SystemStatus__c = '종료'; // SystemStatus__c : 고정값
+					tmpOrderReturn.ShipmentDate__c = target.DateOfLoading__c.date();
+					transperOrder_Target.put(target.SalesDocNo__c, tmpOrderReturn);
+				}
 				if (order_Target.containsKey(target.SalesDocNo__c)) {
 					tmpOrder = order_Target.get(target.SalesDocNo__c);
 					if (dealerAssetTypes.contains(target.DeliveryType__c)) {
@@ -488,6 +499,9 @@ public class Dummy_IF_KR_ERP_SE_0012_2_ba extends Dummy_IF_Batch {
          */
 		System.Savepoint sp;
 		try {
+			System.debug('----------');
+			System.debug(JSON.serializePretty(transperOrder_Target));
+			System.debug('----------');
 			sp = Database.setSavepoint();
 			// Upsert 자산(Asset) Upsert
 			if(asset_Target.isEmpty() == false) update asset_Target.values() ;
@@ -495,6 +509,8 @@ public class Dummy_IF_KR_ERP_SE_0012_2_ba extends Dummy_IF_Batch {
 			if(order_Target.isEmpty() == false) update order_Target.values() ;
 			// 보관재고 업데이트
 			if(updateOrderKeepMap.isEmpty() == false) update updateOrderKeepMap.values() ;
+			// 전수배 반품 주문 업데이트
+			if(transperOrder_Target.isEmpty() == false) update transperOrder_Target.values();
 
 			update scope;
 		}

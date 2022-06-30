@@ -594,24 +594,41 @@ public without sharing class OrderServiceIF {
 
 		Order__c order = [
 				SELECT
-						Id, Division__c, SalesDocNo__c, ErpPOSNR__c, Status__c, IsZRET__c, TransferProcessStatus__c, AssetTransferAgreeStatus__c,
+						Id, Division__c, SalesDocNo__c, Status__c, IsZRET__c, TransferProcessStatus__c, AssetTransferAgreeStatus__c,
 						TransferMachineNo__r.Name,
 						TransferMachineNo__r.BatchNo__c,
 						TransferMachineNo__r.Dealer__r.ERPCode__c,
 						TransferMachineNo__r.Account.ERPCode__c,
 						TransferMachineNo__r.Account.CustomerType__c,
 						TransferMachineNo__r.BusinessOffice__r.SalesGroupCode__c,
-						BusinessOffice__r.SalesGroupCode__c,
-				(SELECT Id, OrderLineitem__c , SalesDocNo__c, ERP_POSNR__c, TransferDealer__c, Status__c,
-						TransferDealer__r.ERPCode__c,
-						TransferDealer__r.BusinessOfficeName__c,
-						Product__r.ProductCode
-				FROM TransferOrders__r LIMIT 1)
-				FROM Order__c WHERE Id =: recordId
+						TransferMachineNo__r.Order__r.PriceDecisionDate__c,
+						OrderScheduleDate__c,
+						BusinessOffice__r.SalesGroupCode__c
+				FROM Order__c WHERE Id = :recordId
 		];
-		TransferOrder__c transferOrder = null;
-		if(order.TransferOrders__r != null && order.TransferOrders__r.size() > 0) {
-			transferOrder = order.TransferOrders__r[0];
+		List<Order__c> transferOrders = [
+				SELECT Id, OrderProduct__r.ProductCode, OrderScheduleDate__c, SalesDocNo__c, PriceDecisionDate__c,
+						ErpPOSNR__c,
+						TransferMachineNo__r.BatchNo__c,
+						TransferBusinessOffice__r.ERPCode__c,
+						TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c
+				FROM Order__c
+				WHERE OrderMaster__c = :recordId
+				LIMIT 1
+		];
+
+		List<OrderLineitem__c> transferOrderItems = [
+				SELECT Id, ProductId__r.ProductCode
+				FROM OrderLineitem__c
+				WHERE OrderId__r.OrderMaster__c = :recordId
+				LIMIT 1
+		];
+
+		Order__c transferOrder = null;
+		OrderLineitem__c transferOrderLineitem = null;
+		if(transferOrders != null && transferOrders.size() > 0) {
+			transferOrder = transferOrders[0];
+			transferOrderLineitem = transferOrderItems[0];
 		}
 		if(transferOrder == null) {
 			returnMap.put('STATUS', 'N');
@@ -645,18 +662,18 @@ public without sharing class OrderServiceIF {
 		LGORTMap.put('71F', '3717');        // 3717전남
 		LGORTMap.put('71H', '3718');        // 3718경남
 
-		String sVSTEL = VSTELMap.containsKey(transferOrder.TransferDealer__r.BusinessOfficeName__c) ?
-				VSTELMap.get(transferOrder.TransferDealer__r.BusinessOfficeName__c) :
+		String sVSTEL = VSTELMap.containsKey(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) ?
+				VSTELMap.get(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) :
 				'';
-		String sLGORT = LGORTMap.containsKey(transferOrder.TransferDealer__r.BusinessOfficeName__c) ?
-				LGORTMap.get(transferOrder.TransferDealer__r.BusinessOfficeName__c) :
+		String sLGORT = LGORTMap.containsKey(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) ?
+				LGORTMap.get(transferOrder.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c) :
 				'';
 
 		tData = new IF_KR_SE_ERP_0007.T_DATA();
 
 		tData.OrderID           = transferOrder.Id;
-		tData.OrderLineItemID   = transferOrder.OrderLineitem__c;
-		tData.ProductCode       = transferOrder.Product__r.ProductCode;
+		tData.OrderLineItemID   = transferOrderLineitem.Id;
+		tData.ProductCode       = transferOrderLineitem.ProductId__r.ProductCode;
 		tData.ErpVKGRP          = order.TransferMachineNo__r.BusinessOffice__r.SalesGroupCode__c;   //BusinessOffice__r.SalesGroupCode__c;
 		tData.ErpBSTKD          = order.SalesDocNo__c;
 		tData.ErpBSTDK          = String.valueOf(system.now().format('yyyyMMdd'));      // 원주문의 PO 날짜가 필요한데 값이 없다.
@@ -664,17 +681,16 @@ public without sharing class OrderServiceIF {
 		// 수배 대리점의 ERP Code를 지정 해야 한다.
 		// 수배 대리점의 자산의 고객이 농협/관납이면 농협/관납 ERPCode__c를 보낸다.
 		// 2021/04/22
-		//
-		tData.ErpKUNNR          = transferOrder.TransferDealer__r.ERPCode__c;
-		tData.ErpKUNNR2         = transferOrder.TransferDealer__r.ERPCode__c;
-		tData.ErpKUNNR3         = transferOrder.TransferDealer__r.ERPCode__c;
-//        order.TransferMachineNo__r.Dealer__r.ERPCode__c,
-//        order.TransferMachineNo__r.Account.ERPCode__c,
+
+		tData.ErpKUNNR          = transferOrder.TransferBusinessOffice__r.ERPCode__c;
+		tData.ErpKUNNR2         = transferOrder.TransferBusinessOffice__r.ERPCode__c;
+		tData.ErpKUNNR3         = transferOrder.TransferBusinessOffice__r.ERPCode__c;
+
 		Set<String> checkCustomers = new Set<String>{'농협','관납'};
-		if(checkCustomers.contains(order.TransferMachineNo__r.Account.CustomerType__c)) {
-			tData.ErpKUNNR          = order.TransferMachineNo__r.Account.ERPCode__c;
-			tData.ErpKUNNR2         = order.TransferMachineNo__r.Account.ERPCode__c;
-			tData.ErpKUNNR3         = order.TransferMachineNo__r.Account.ERPCode__c;
+		if(checkCustomers.contains(transferOrder.TransferMachineNo__r.Account.CustomerType__c)) {
+			tData.ErpKUNNR          = transferOrder.TransferMachineNo__r.Account.ERPCode__c;
+			tData.ErpKUNNR2         = transferOrder.TransferMachineNo__r.Account.ERPCode__c;
+			tData.ErpKUNNR3         = transferOrder.TransferMachineNo__r.Account.ERPCode__c;
 		}
 
 		tData.Quanitity         = '1';
@@ -689,7 +705,7 @@ public without sharing class OrderServiceIF {
 		tData.VSTEL             = sVSTEL;
 		tData.LGORT             = sLGORT;
 
-		tData.ErpPOSNR          = transferOrder.ERP_POSNR__c;
+		tData.ErpPOSNR          = transferOrder.ErpPOSNR__c;
 		tData.ErpZTERM          = ' ';
 		tData.SalesDocNo        = transferOrder.SalesDocNo__c;
 		tData.ErpCMGST          = ' ';

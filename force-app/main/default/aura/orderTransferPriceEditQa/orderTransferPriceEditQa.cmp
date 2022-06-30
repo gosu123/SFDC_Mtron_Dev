@@ -56,7 +56,7 @@
                     </lightning:layoutItem>
                     <lightning:layoutItem size="9">
                         <p class="slds-m-left_x-large slds-size_6-of-12">
-                            <lightning:input type="number" aura:id="SellingPrice" label="{#v.returnOrder.tOrderLineItem.SellingPrice__c}" value="{!v.returnOrder.tOrderLineItem.SellingPrice__c}" disabled="{!true}" variant="label-hidden" />
+                            <lightning:input type="number" aura:id="OriginalSellingPrice" label="{#v.returnOrder.tOrder.TransferMachineNo__r.Order__r.ru_SellingPrice__c}" value="{!v.returnOrder.tOrder.TransferMachineNo__r.Order__r.ru_SellingPrice__c}" disabled="{!true}" variant="label-hidden" />
                         </p>
                     </lightning:layoutItem>
                 </lightning:layout>
@@ -80,7 +80,7 @@
                     </lightning:layoutItem>
                     <lightning:layoutItem size="9">
                         <p class="slds-m-left_x-large slds-size_6-of-12">
-                            <lightning:input type="number" aura:id="CorrectionPrice" value="{!v.returnOrder.tOrderLineItem.CorrectionPrice__c}" variant="label-hidden" onchange="{!c.doPriceChange}"/>
+                            <lightning:input type="number" aura:id="CorrectionPrice" value="{!v.returnOrder.tOrderLineItem.CorrectionPrice__c}" variant="label-hidden" disabled="{!not(v.isProcess)}" onchange="{!c.doPriceChange}"/>
                         </p>
                     </lightning:layoutItem>
                 </lightning:layout>

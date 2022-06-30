@@ -1187,7 +1187,7 @@ public with sharing class DealerIncentiveERPSend_service {
 				tData1.CONFM2       = 'X';      // 수수료 영업팀 확정 여부
 				// REFLG	01 정상 02 특판제품 03 전략제품 04 전략지역 05 고정급 06 기존추가 07 신규추가 08 참조적자 09 적자 10 광역지역 11 목표달성 12 실판정산 13 중개
 				tData1.REFLG        = status == 'X' ? '09' : '01';      // 수수료 상세구분
-				tData1.LOEKZ        = status;      // 삭제지시
+				tData1.LOEKZ        = '';      // 삭제지시
 
 				tData1.URL1         = '';
 				tData1.URL2         = '';

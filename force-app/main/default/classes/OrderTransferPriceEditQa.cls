@@ -44,7 +44,8 @@ public without sharing class OrderTransferPriceEditQa {
 						OrderId__r.Status__c,
 						OrderId__r.IsOutAsset__c,
 						OrderId__r.TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c,
-						OrderId__r.TransferBusinessOffice__r.ERPCode__c
+						OrderId__r.TransferBusinessOffice__r.ERPCode__c,
+						OrderId__r.TransferMachineNo__r.Order__r.ru_SellingPrice__c
 				FROM OrderLineitem__c
 				WHERE OrderId__c = :recordId
 		];

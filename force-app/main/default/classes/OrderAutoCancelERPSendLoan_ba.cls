@@ -88,7 +88,7 @@ public with sharing class OrderAutoCancelERPSendLoan_ba implements Database.Batc
 				'AND OrderScheduleDate__c = THIS_MONTH ';
 		Integer moreCount = Database.countQuery(countQuery);
 		if(moreCount > 0) {
-			OrderAutoCancelERPSend_ba ba = new OrderAutoCancelERPSend_ba();
+			OrderAutoCancelERPSendLoan_ba ba = new OrderAutoCancelERPSendLoan_ba();
 			Database.executeBatch(ba, 50);
 		}
 	}

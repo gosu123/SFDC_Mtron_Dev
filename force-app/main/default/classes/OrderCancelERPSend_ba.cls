@@ -32,6 +32,7 @@ public with sharing class OrderCancelERPSend_ba implements Database.Batchable<SO
 						ERPOrderCancelMessage__c
 				FROM    Order__c
 				WHERE   IsAutoCancel__c = TRUE
+				AND 	Division__c != '전수배반품'
 				AND     LastModifiedDate = TODAY
 				AND     SalesDocNo__c != NULL
 		]);

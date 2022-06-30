@@ -42,7 +42,7 @@
             component.set('v.isProcess', resData.isProcess);
             component.set('v.OldSellingPrice', component.get('v.returnOrder').tOrderLineItem.SellingPrice__c);
             if(resData.isProcess === false) {
-                helper.gfn_toast('전수배 반품 주문의 가격정정 가능한 상태가 아닙니다.', 'w');
+                helper.gfn_toast('전수배 반품 주문은 SAP 전송 이후 완료 이전에 가격 정정이 가능합니다.', 'w');
             }
         }).catch(function ({error, response}) {
             helper.gfn_ApexErrorHandle(error, response);

@@ -52,6 +52,7 @@ public with sharing class OrderCancelAlarm_ba implements Database.Batchable<SObj
                     RecordType.Name
             FROM    Order__c
             WHERE   (OrderScheduleDate__c <= LAST_MONTH AND OrderScheduleDate__c != NULL)
+            AND     Division__c != '전수배반품'
             AND     Status__c IN :targetStatus
             AND     BusinessOfficeRep__c != NULL
         ]);

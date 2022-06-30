@@ -44,7 +44,7 @@ public with sharing class OrderCancelERPSend2_ba implements Database.Batchable<S
 		String callType = 'ZRET';
 		for(Order__c r : scope) {
 			// 전수배 반품 주문 취소
-			returnMap = OrderServiceIF.OrderCancel_ZORT(r.Id);
+			returnMap = OrderServiceIF.OrderCancel_ZRET(r.Id);
 			if(returnMap != null && returnMap.get('STATUS') == 'Y') r.ERPOrderCancelStatus__c = callType+' 취소성공';
 			else                                                    r.ERPOrderCancelStatus__c = callType+' 취소실패';
 			r.ERPOrderCancelMessage__c = returnMap.get('MESSAGE').left(255);

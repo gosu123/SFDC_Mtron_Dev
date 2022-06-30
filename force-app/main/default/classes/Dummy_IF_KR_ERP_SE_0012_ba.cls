@@ -243,6 +243,7 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
                         LIMIT 1)
                 FROM    Order__c
                 WHERE   SalesDocNo__c IN :order_Set
+                AND     Division__c != '전수배반품'
         ]) {
             order_Target.put(order.SalesDocNo__c, order);
         }
@@ -263,11 +264,18 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
             orderKeepMap.put(order.SalesDocNo__c, order);
         }
 
-        Map<String, TransferOrder__c> transperOrder_Target = new Map<String, TransferOrder__c>();
-        for(TransferOrder__c r : [
-                SELECT Id, SalesDocNo__c, Order__c, Order__r.TransferBusinessOffice__c, Order__r.TransferBusinessOffice__r.BusinessOffice__c
-                FROM TransferOrder__c
+        Map<String, Order__c> transperOrder_Target = new Map<String, Order__c>();
+        for(Order__c r : [
+                SELECT Id, SalesDocNo__c,
+                        OrderMaster__c, OrderMaster__r.TransferBusinessOffice__c, OrderMaster__r.TransferBusinessOffice__r.BusinessOffice__c,
+                        (SELECT
+                            Id,
+                            Name
+                            From OrderProduct__r
+                        LIMIT 1)
+                FROM Order__c
                 WHERE SalesDocNo__c IN :order_Set
+                AND Division__c = '전수배반품'
         ]) {
             transperOrder_Target.put(r.SalesDocNo__c, r);
         }
@@ -479,7 +487,12 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
                     tmpDelivery.OrderSellIn__c = orderKeepMap.get(dummy.SalesDocNo__c).Order__c;
                 } else if (transperOrder_Target.containsKey(dummy.SalesDocNo__c)) {
                     // 전수배 반품시 처리.
-                    tmpDelivery.OrderSellIn__c = transperOrder_Target.get(dummy.SalesDocNo__c).Order__c;
+                    tmpDelivery.OrderSellIn__c = transperOrder_Target.get(dummy.SalesDocNo__c).Id;
+                    if ((transperOrder_Target.get(dummy.SalesDocNo__c).OrderProduct__r).size() > 0) {
+                        tmpDelivery.OrderItem__c = transperOrder_Target.get(dummy.SalesDocNo__c).OrderProduct__r[0].Id;
+                    } else {
+                        tmpDelivery.OrderItem__c = null;
+                    }
                 } else {
                     tmpDelivery.OrderSellIn__c = null;
                     tmpDelivery.OrderItem__c = null;
@@ -491,8 +504,8 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
                         tmpDelivery.SendItemOffice__c = order_Target.get(dummy.SalesDocNo__c).TransferBusinessOffice__r.BusinessOffice__c; // 전배 영업소 SendItemOffice__c 조회(고객) 참
                     }
                     if (dummy.DeliveryType__c == '전수배반품' && transperOrder_Target.containsKey(dummy.SalesDocNo__c)) {
-                        tmpDelivery.SendItemDealer__c = transperOrder_Target.get(dummy.SalesDocNo__c).Order__r.TransferBusinessOffice__c; // 전배 대리점 SendItemDealer__c 조회(고객) 참
-                        tmpDelivery.SendItemOffice__c = transperOrder_Target.get(dummy.SalesDocNo__c).Order__r.TransferBusinessOffice__r.BusinessOffice__c; // 전배 영업소 SendItemOffice__c 조회(고객) 참
+                        tmpDelivery.SendItemDealer__c = transperOrder_Target.get(dummy.SalesDocNo__c).OrderMaster__r.TransferBusinessOffice__c; // 전배 대리점 SendItemDealer__c 조회(고객) 참
+                        tmpDelivery.SendItemOffice__c = transperOrder_Target.get(dummy.SalesDocNo__c).OrderMaster__r.TransferBusinessOffice__r.BusinessOffice__c; // 전배 영업소 SendItemOffice__c 조회(고객) 참
                     }
                     tmpDelivery.ReleaseDate__c = String.isBlank(dummy.ErpOUT_DATE__c) ? null : Dummy_IF_BatchUtil.getIFDate(dummy.ErpOUT_DATE__c); // 날짜/시간 : ErpOUT_DATE__c + ErpOUT_TIME__c 전수배상차일 ReleaseDate__c 날짜
                 } else {

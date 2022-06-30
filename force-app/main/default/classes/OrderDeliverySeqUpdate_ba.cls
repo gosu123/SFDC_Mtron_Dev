@@ -33,6 +33,7 @@ public with sharing class OrderDeliverySeqUpdate_ba implements Database.Batchabl
 					SELECT  OrderProduct__r.ProductCode productCode, COUNT(Id)
 					FROM Order__c
 					WHERE Status__c != '종료'
+					AND Division__c != '전수배반품'
 					AND isOrderCancel__c = FALSE
 					AND VSTEL__c IN ('', 'M620')
 					GROUP BY  OrderProduct__r.ProductCode
@@ -60,6 +61,7 @@ public with sharing class OrderDeliverySeqUpdate_ba implements Database.Batchabl
 						Id, Name, DeliverySeq__c, Status__c,RecordType.Name, PurposeOfOrder__c, fm_RecordTypeOrder__c, fm_OrderScheduleYearMonth__c,  fm_IsPreOrder__c,   fm_OrderPurposeOrder__c,   OrderScheduleDate__c,  CreatedDate
 				FROM Order__c
 				WHERE Status__c != '종료'
+				AND Division__c != '전수배반품'
 				AND isOrderCancel__c = FALSE
 				AND VSTEL__c IN ('', 'M620')
 				AND OrderScheduleDate__c != NULL
@@ -72,7 +74,6 @@ public with sharing class OrderDeliverySeqUpdate_ba implements Database.Batchabl
         }
         update orderList;
     }
-
 
     public void finish(Database.BatchableContext BC) {
     }

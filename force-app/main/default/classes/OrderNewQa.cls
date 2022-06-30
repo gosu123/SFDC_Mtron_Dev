@@ -496,6 +496,7 @@ public without sharing class OrderNewQa {
                         Id, Name, DeliverySeq__c, Status__c,RecordType.Name, PurposeOfOrder__c, fm_RecordTypeOrder__c, fm_OrderScheduleYearMonth__c,  fm_IsPreOrder__c,   fm_OrderPurposeOrder__c,   OrderScheduleDate__c,  CreatedDate
                 FROM Order__c
                 WHERE Status__c != '종료'
+                AND Division__c != '전수배반품'
                 AND isOrderCancel__c = FALSE
                 AND VSTEL__c IN ('', 'M620')
                 AND OrderScheduleDate__c != NULL

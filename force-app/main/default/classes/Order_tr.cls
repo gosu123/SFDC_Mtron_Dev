@@ -39,7 +39,7 @@ public without sharing class Order_tr extends TriggerHandler {
 
     private void preOrderCheckInsert(List<Order__c> orderList){
         for (Order__c orderTemp : orderList) {
-            if(orderTemp.Status__c != '종료') {
+            if(orderTemp.Status__c != '종료' && orderTemp.Division__c != '전수배반품') {
                 if(orderTemp.OrderScheduleDate__c == null) {
                     orderTemp.OrderScheduleDate__c = orderTemp.DeliveryDate__c;
                 }
@@ -66,7 +66,7 @@ public without sharing class Order_tr extends TriggerHandler {
             oldOrder = (Order__c) oldMap.get(r.Id);
 
             //System.debug(r.OrderScheduleDate__c.toStartOfMonth() + ' / ' + oldOrder.CreatedDate.date().toStartOfMonth().addMonths(3));
-            if(r.Status__c == '종료') {
+            if(r.Status__c == '종료' || r.Division__c == '전수배반품') {
                 continue;
             }
             if(r.OrderScheduleDate__c == null) {
@@ -92,6 +92,7 @@ public without sharing class Order_tr extends TriggerHandler {
         List<OrderKeep__c> orderKeeps = new List<OrderKeep__c>();
         Set<Id> orderIds = new Set<Id>();
         for (Order__c r : newList) {
+            if(r.Division__c == '전수배반품') continue;
             oldOrder = (Order__c) oldMap.get(r.Id);
             if (r.Status__c == '출하' && r.KeppApprovalStatus__c != oldOrder.KeppApprovalStatus__c && r.KeppApprovalStatus__c == '승인') {
                 // 보관처리 승인
@@ -215,6 +216,7 @@ public without sharing class Order_tr extends TriggerHandler {
 //        System.debug(JSON.serialize(newList));
         System.debug('========================================');
         for(Order__c r : newList) {
+            if(r.Division__c == '전수배반품') continue;
             oldOrder = (Order__c) oldMap.get(r.Id);
             if(r.LoanApprovalStatus__c != oldOrder.LoanApprovalStatus__c && (r.LoanApprovalStatus__c == '승인' || r.LoanApprovalStatus__c == '반려')) {
                 // ERP 승인 결과 처리 대상.
@@ -447,6 +449,7 @@ public without sharing class Order_tr extends TriggerHandler {
         // 처리 대상 정리
         Set<Id> targetOrderIds = new Set<Id>();
         for(Order__c r : newList) {
+            if(r.Division__c == '전수배반품') continue;
             if((r.IsDummyContractOrder__c && r.Opportunity__c == null) || (oldMap != null && oldMap.containsKey(r.Id) && r.Status__c != oldMap.get(r.Id).Status__c && r.Status__c == checkStatus)) {
                 targetOrderIds.add(r.Id);
             }

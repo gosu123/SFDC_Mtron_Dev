@@ -139,13 +139,6 @@ public with sharing class OpportunityLossStageUpdateContract_ba implements Datab
         // 주문의 상태로 판단한 처리 주문 업데이트
         update updateOrderList;
 
-/*        // SalesIQ 점수 등록
-        try {
-            SalesIQService.setOpportunitySalesIQ(lossOpptyIds, 'IQ-0003');
-        } catch (Exception e) {
-            // none ;
-        }*/
-
         //============================================================================
         // 일괄처리를 하지 않고 부분 성공 허용
         // allOrNothing 을 false 처리하여 건건히는 수행되 되게끔 처리함.
