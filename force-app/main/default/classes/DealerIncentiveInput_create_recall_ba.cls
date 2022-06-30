@@ -67,7 +67,7 @@ public class DealerIncentiveInput_create_recall_ba implements Database.Batchable
 							SalesDiscountAmount__c    ,
 							SalesDiscountRate__c
 					FROM DealerIncentiveCalculate__c
-					WHERE CalculationDate__c = LAST_MONTH
+					WHERE CalculationDate__c = THIS_MONTH
 					AND Status__c = '회수'
 					AND IsSendERP__c = FALSE
 					ORDER BY Asset__c, IncentiveType__c ASC

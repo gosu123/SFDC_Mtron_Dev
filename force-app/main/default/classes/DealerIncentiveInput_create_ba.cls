@@ -68,7 +68,7 @@ public class DealerIncentiveInput_create_ba implements Database.Batchable<SObjec
 							SalesDiscountAmount__c    ,
 							SalesDiscountRate__c
 					FROM DealerIncentiveCalculate__c
-					WHERE CalculationDate__c = LAST_MONTH
+					WHERE CalculationDate__c = THIS_MONTH
 					AND Status__c = '지급'
 					AND IsSendERP__c = FALSE
 					ORDER BY Asset__c, IncentiveType__c ASC
@@ -122,7 +122,7 @@ public class DealerIncentiveInput_create_ba implements Database.Batchable<SObjec
 			dii.PaymentType__c = '지급';
 			for(DealerIncentiveCalculate__c target : targetList) {
 				// 마스터 키 : 기준년월 / 기표유형 / 기대번호 / 대리점코드
-				dii.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + '지급' + '/' + target.Asset__r.Name + '/' + target.Dealer__r.ERPCode__c;
+				dii.ExternalKey__c = ((Datetime)processDate).format('yyyyMM') + '/' + '지급' + '/' + target.Asset__r.BatchNo__c + '/' + target.Dealer__r.ERPCode__c;
 				dii.BusinessOffice__c = target.Dealer__r.BusinessOffice__c;
 				if(target.Type__c == '농협') {
 					dii.RecordTypeId = nhRecordTypeId;

@@ -1368,7 +1368,7 @@ public with sharing class DealerIncentiveERPSend_service {
 			target.Asset__r.IncentiveSeqNo__c = seqNo;
 		}
 		System.debug('-----------------------');
-		//System.debug('result : '+JSON.serializePretty(input));
+		System.debug('result : '+JSON.serializePretty(input));
 		System.debug('-----------------------');
 		IF_KR_SE_ERP_0043.OutputDIH result = instance.execute(input);
 		List<DealerIncentiveCalculate__c> updateList = new List<DealerIncentiveCalculate__c>();

@@ -226,7 +226,7 @@ public class DealerIncentiveERPSend_ba implements Database.Batchable<SObject>, D
     }
 
     public void execute(Database.BatchableContext BC, List<DealerIncentiveInput__c> scope) {
-        DealerIncentiveERPSendCa_service.incentiveERPSendCancel(scope);
+        DealerIncentiveERPSend_service.incentiveERPSend(scope);
     }
 
     public void finish(Database.BatchableContext BC) {

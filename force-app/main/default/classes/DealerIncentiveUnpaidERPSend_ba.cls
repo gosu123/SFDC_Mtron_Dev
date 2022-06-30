@@ -49,6 +49,7 @@ public class DealerIncentiveUnpaidERPSend_ba implements Database.Batchable<SObje
 							ApproveDate__c,
 							Asset__c,
 							Asset__r.Name,
+							Asset__r.BatchNo__c,
 							Asset__r.InventoryType__c,
 							Asset__r.ProductionDate__c,
 							Asset__r.FirstDeliveryDate__c,
