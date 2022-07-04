@@ -1098,6 +1098,12 @@ public with sharing class DealerIncentiveERPSend_service {
 				status = target.DealerIncentiveCalculate3__r.Status__c == '지급' ? '' : 'X';
 				SupplyAmount = target.DealerIncentiveCalculate3__r.SupplyAmount__c;
 			}
+			if(target.DealerIncentiveCalculate6__c != null) {
+				salesDocNo = target.DealerIncentiveCalculate6__r.SalesDocNo__c;
+				lineNumber = target.DealerIncentiveCalculate6__r.LineNumber__c;
+				status = target.DealerIncentiveCalculate6__r.Status__c == '지급' ? '' : 'X';
+				SupplyAmount = target.DealerIncentiveCalculate6__r.SupplyAmount__c;
+			}
 			if(target.DealerIncentiveCalculate9__c != null) {
 				salesDocNo = target.DealerIncentiveCalculate9__r.SalesDocNo__c;
 				lineNumber = target.DealerIncentiveCalculate9__r.LineNumber__c;
@@ -1160,8 +1166,15 @@ public with sharing class DealerIncentiveERPSend_service {
 				}
 				tData1.NESFT        = '';
 				tData1.NESFM        = '';
-				tData1.EPSRT        = '';
-				tData1.EPSAM        = '';
+
+				if(target.DealerIncentiveCalculate6__c != null) {
+					tData1.EPSRT 		= DealerIncentiveERPSend_service.getConvertRate(target.fm_PlanDealerIncentiveCalculate6Rate__c);      		// 조기 판매 장려
+					tData1.EPSAM 		= DealerIncentiveERPSend_service.getConvertCurrency(target.fm_PlanDealerIncentiveCalculate6Amount__c);      // 조기 판매 장려
+				} else {
+					tData1.EPSRT 		= '';      // 조기 판매 장려
+					tData1.EPSAM 		= '';      // 조기 판매 장려
+				}
+
 				//시승체험지원
 				tData1.TESRT        = '';      // 시승체험지원(%)
 				tData1.TESAM        = '';      // 시승체험지원

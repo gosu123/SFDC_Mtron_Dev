@@ -72,6 +72,15 @@ public class DealerIncentiveUnpaidERPSend_ba implements Database.Batchable<SObje
 							DealerIncentiveCalculate3__r.SalesAccount__r.ERPCode__c,
 							fm_PlanDealerIncentiveCalculate3Amount__c,
 							fm_PlanDealerIncentiveCalculate3Rate__c,
+							DealerIncentiveCalculate6__c,
+							DealerIncentiveCalculate6__r.SupplyAmount__c,
+							DealerIncentiveCalculate6__r.SalesDocNo__c,
+							DealerIncentiveCalculate6__r.LineNumber__c,
+							DealerIncentiveCalculate6__r.Status__c,
+							DealerIncentiveCalculate6__r.ERPSeqNo__c,
+							DealerIncentiveCalculate6__r.SalesAccount__r.ERPCode__c,
+							fm_PlanDealerIncentiveCalculate6Amount__c,
+							fm_PlanDealerIncentiveCalculate6Rate__c,
 							DealerIncentiveCalculate9__c,
 							DealerIncentiveCalculate9__r.SupplyAmount__c,
 							DealerIncentiveCalculate9__r.SalesDocNo__c,
@@ -117,10 +126,11 @@ public class DealerIncentiveUnpaidERPSend_ba implements Database.Batchable<SObje
 					AND ApprovalStatus__c = '승인'
 					AND IsSend__c = FALSE
 					AND (
-							   (DealerIncentiveCalculate3__c != NULL AND DealerIncentiveCalculate3__r.Division__c = '계획')
-							OR (DealerIncentiveCalculate9__c != NULL  AND DealerIncentiveCalculate9__r.Division__c = '계획')
-							OR (DealerIncentiveCalculate10__c != NULL  AND DealerIncentiveCalculate10__r.Division__c = '계획')
-							OR (DealerIncentiveCalculate11__c != NULL  AND DealerIncentiveCalculate11__r.Division__c = '계획')
+							(DealerIncentiveCalculate3__c != NULL AND DealerIncentiveCalculate3__r.Division__c = '계획' AND DealerIncentiveCalculate3__r.IsSendERP__c = FALSE)
+							OR (DealerIncentiveCalculate6__c != NULL  AND DealerIncentiveCalculate6__r.Division__c = '계획' AND DealerIncentiveCalculate6__r.IsSendERP__c = FALSE)
+							OR (DealerIncentiveCalculate9__c != NULL  AND DealerIncentiveCalculate9__r.Division__c = '계획' AND DealerIncentiveCalculate9__r.IsSendERP__c = FALSE)
+							OR (DealerIncentiveCalculate10__c != NULL  AND DealerIncentiveCalculate10__r.Division__c = '계획' AND DealerIncentiveCalculate10__r.IsSendERP__c = FALSE)
+							OR (DealerIncentiveCalculate11__c != NULL  AND DealerIncentiveCalculate11__r.Division__c = '계획' AND DealerIncentiveCalculate11__r.IsSendERP__c = FALSE)
 					)
 					ORDER BY Asset__r.Name ASC
 			]);

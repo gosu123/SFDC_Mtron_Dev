@@ -203,19 +203,19 @@ public class DealerIncentiveERPSend_ba implements Database.Batchable<SObject>, D
                     WHERE BaseDate__c = LAST_MONTH
                     AND ApprovalStatus__c = '승인'
                     AND (
-                            DealerIncentiveCalculate1__c != NULL
-                            OR (DealerIncentiveCalculate3__c != NULL AND DealerIncentiveCalculate3__r.Division__c = '실적')
-                            OR DealerIncentiveCalculate4__c != NULL
-                            OR DealerIncentiveCalculate6__c != NULL
-                            OR DealerIncentiveCalculate7__c != NULL
-                            OR DealerIncentiveCalculate8__c != NULL
-                            OR (DealerIncentiveCalculate9__c != NULL  AND DealerIncentiveCalculate9__r.Division__c = '실적')
-                            OR (DealerIncentiveCalculate10__c != NULL  AND DealerIncentiveCalculate10__r.Division__c = '실적')
-                            OR (DealerIncentiveCalculate11__c != NULL  AND DealerIncentiveCalculate11__r.Division__c = '실적')
-                            OR DealerIncentiveCalculate12__c != NULL
-                            OR DealerIncentiveCalculate13__c != NULL
-                            OR DealerIncentiveCalculate14__c != NULL
-                            OR DealerIncentiveCalculate15__c != NULL
+                            (DealerIncentiveCalculate1__c != NULL AND DealerIncentiveCalculate1__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate3__c != NULL AND DealerIncentiveCalculate3__r.Division__c = '실적' AND DealerIncentiveCalculate3__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate4__c != NULL AND DealerIncentiveCalculate4__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate6__c != NULL AND DealerIncentiveCalculate6__r.Division__c = '실적' AND DealerIncentiveCalculate6__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate7__c != NULL AND DealerIncentiveCalculate7__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate8__c != NULL AND DealerIncentiveCalculate8__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate9__c != NULL  AND DealerIncentiveCalculate9__r.Division__c = '실적' AND DealerIncentiveCalculate9__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate10__c != NULL  AND DealerIncentiveCalculate10__r.Division__c = '실적' AND DealerIncentiveCalculate10__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate11__c != NULL  AND DealerIncentiveCalculate11__r.Division__c = '실적' AND DealerIncentiveCalculate11__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate12__c != NULL AND DealerIncentiveCalculate12__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate13__c != NULL AND DealerIncentiveCalculate13__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate14__c != NULL AND DealerIncentiveCalculate14__r.IsSendERP__c = FALSE)
+                            OR (DealerIncentiveCalculate15__c != NULL AND DealerIncentiveCalculate15__r.IsSendERP__c = FALSE)
                     )
                     ORDER BY Asset__r.Name, PaymentType__c
             ]);
