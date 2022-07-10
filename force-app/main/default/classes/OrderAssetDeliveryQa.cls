@@ -86,12 +86,15 @@ public without sharing class OrderAssetDeliveryQa {
                 return initData;
             }
             if(initData.order.Division__c == '전수배공급') {
+
                 if(initData.order.OrderTransferReturns__r.isEmpty() == true) {
                     initData.isProcess = false;
                     initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';
                     return initData;
                 } else {
                     for(Order__c to : initData.order.OrderTransferReturns__r) {
+                        //  @TODO : 전수배반품 기대의 주문의 공급 가격과, 전수배반품 레코드 안에 있는 공급 가격  비교
+                        //  전진 주임님....
                         if(to.SalesDocNo__c == null) {
                             initData.isProcess = false;
                             initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';

@@ -186,6 +186,18 @@ public without sharing class DealerIncentiveCalculate_service {
 		if(dic.SupplyAmount__c == null || dic.SupplyAmount__c == 0) {
 			return null;
 		}
+		/**
+		 * @TODO 전진 : 여기에 관납 수수료율을 구하면 됩니다.
+    if(xxMap.containsKey(r.제품구분)) {
+         for(수수료율 xx : xxMap.get(r.제품구분)) {
+              if(xx.from >= r.주문할인율 && xx.to < 주문할인율) {
+                   할인율 = xx.할인율
+              }
+
+         }
+    }
+
+*/
 		if(dcRateMap.containsKey(target.Product2.ProductDivision__c)) {
 			if(target.Product2.ProductDivision__c == 'MINI') {
 				// 금액으로 율 구해야 한다.

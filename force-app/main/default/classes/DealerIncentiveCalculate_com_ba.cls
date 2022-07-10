@@ -866,12 +866,14 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 
 		List<DealerIncentiveCalculate__c> insertDicList = new List<DealerIncentiveCalculate__c>();
 		Boolean IsSalesIQComplete;
+
+		// @TODO 전진 : 관납 수수료 율 구하기 Map 생성
 		for (Asset target : scope) {
 			IsSalesIQComplete = false;
 			if(salesIQMap.containsKey(target.Dealer__c)) {
 				IsSalesIQComplete = salesIQMap.get(target.Dealer__c);
 			}
-			// TODO : 농협, 관납, 대리점, 중개 수수료 만들어야 함.
+
 			// 0. PDI 계획 레코드 만들기.
 			if(nhChectType.contains(target.Account.CustomerType__c) == false) {
 				dic = DealerIncentiveCalculate_service.getPDICreate(target, processDate, '계획', '지급');
@@ -880,6 +882,7 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 				// 3. 관납사후봉사
 				if(target.Account.CustomerType__c == '관납') {
 					dic = DealerIncentiveCalculate_service.getGovSalesCreate(target, processDate, '계획', '지급');
+					//dic = DealerIncentiveCalculate_service.getGovSalesCreate(target, processDate, '계획', '지급', 수수료율 Map);
 					if(dic != null) insertDicList.add(dic);
 				}
 				// 4. 농협사후봉사
