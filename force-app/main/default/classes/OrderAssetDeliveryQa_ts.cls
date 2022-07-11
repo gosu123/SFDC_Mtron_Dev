@@ -41,11 +41,18 @@ private class OrderAssetDeliveryQa_ts {
         insert orderList;
 
         //@TODO : 전수배반품주문
+        Order__c to = order.clone(false);
+        to.RecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('전수배반품').getRecordTypeId();
+        to.Division__c = '전수배반품';
+        to.SalesDocNo__c = '591';
+        to.OrderMaster__c = order3.Id;
+        insert to;
+/*
         TransferOrder__c to = new TransferOrder__c(SalesDocNo__c = '1234', Order__c = order.Id);
         insert to;
         TransferOrder__c to2 = new TransferOrder__c(SalesDocNo__c = null, Order__c = order4.Id);
         insert to2;
-
+*/
 
         OrderAssetDeliveryQa.InitData initData = OrderAssetDeliveryQa.init(order.Id);
         System.assertNotEquals(initData.validMessage,null);
@@ -74,7 +81,7 @@ private class OrderAssetDeliveryQa_ts {
                 (
                         SELECT Id, SalesDocNo__c FROM OrderTransferReturns__r LIMIT 1
                 )
-                FROM Order__c WHERE Id =: order.Id AND SalesDocNo__c != NULL];
+                FROM Order__c WHERE Id =: order3.Id AND SalesDocNo__c != NULL];
 
         List<Order__c> notiTargetOrders = new List<Order__c>();
 

@@ -35,29 +35,42 @@ private class OrderERPSendRetrunQa_ts {
 		TestDataSalesFactory.init();
 		TestDataProductFactory.init();
 
-		List<Order__c> orderList = new List<Order__c>();
 		Order__c order = TestDataSalesFactory.orderForPerFarCorp;
-		Order__c order2 = order.clone(false, true);
-		order2.SalesDocNo__c = '';
-		order2.Division__c = '공장주문';
-		order2.Status__c = '본사 주문 확정';
-		orderList.add(order2);
-		Order__c order3 = order2.clone(false, true);
-		order3.SalesDocNo__c = '';
-		order3.Division__c = 'test';
-		orderList.add(order3);
-		Order__c order4 = order2.clone(false, true);
-		order4.SalesDocNo__c = '';
-		order4.Status__c = '본사 여신 검토';
-		orderList.add(order4);
-		insert orderList;
 
-		OrderERPSendRetrunQa.InitData initData = OrderERPSendRetrunQa.init(order.Id);
+		Order__c transferOrder = TestDataSalesFactory.orderForPerFarCorp.clone(false, true);
+		transferOrder.RecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('전수배반품').getRecordTypeId();
+		transferOrder.Division__c = '전수배반품';
+		transferOrder.SalesDocNo__c = '';
+		transferOrder.OrderMaster__c = order.Id;
+		insert transferOrder;
+
+		OrderERPSendRetrunQa.InitData initData = OrderERPSendRetrunQa.init(transferOrder.Id);
+		transferOrder.SalesDocNo__c = '591';
+		update transferOrder;
+		initData = OrderERPSendRetrunQa.init(transferOrder.Id);
 		System.assertNotEquals(initData.validMessage,null);
-		for(Order__c o : orderList){
-			initData = OrderERPSendRetrunQa.init(o.Id);
-			System.assertNotEquals(initData.validMessage,null);
-		}
+
+		transferOrder.SalesDocNo__c = '';
+		transferOrder.Division__c = '전수배공급';
+		update transferOrder;
+		initData = OrderERPSendRetrunQa.init(transferOrder.Id);
+		System.assertNotEquals(initData.validMessage,null);
+
+		transferOrder.SalesDocNo__c = '';
+		transferOrder.Division__c = '전수배반품';
+		transferOrder.Status__c = '영업소 주문 검토';
+		update transferOrder;
+		initData = OrderERPSendRetrunQa.init(transferOrder.Id);
+		System.assertNotEquals(initData.validMessage,null);
+
+		transferOrder.SalesDocNo__c = '';
+		transferOrder.Division__c = '전수배반품';
+		transferOrder.Status__c = '영업소 주문 검토';
+		update transferOrder;
+		order.IsZRET__c = true;
+		update order;
+		initData = OrderERPSendRetrunQa.init(transferOrder.Id);
+		System.assertNotEquals(initData.validMessage,null);
 
 		IfStaticValue__c ifStaticValue = TestDataIFCalloutFactory.createIfStaticValue();
 		IF_Base.IfStaticValue(ifStaticValue);
@@ -66,9 +79,11 @@ private class OrderERPSendRetrunQa_ts {
 				'{"Response":{"Header":{"TrackingId":"38a0f138-ca02-a983-ce9d-64dd5caf0911","TaskId":"IF_KR_SE_ERP_0007","SenderGroup":"CN","SenderCode":"CXP","ResultCode":"S","IFDatetime":"20190603085741","ErrorMsg":"","ErrorCode":"","DestinationGroup":"CN","DestinationCode":"ERP"},"Payload":{"TOTAL_RECORD_CNT":"2"}}}'
 		));
 
-		final String OrderId = order.Id;
 		Test.startTest();
-		OrderERPSendRetrunQa.sendERP(orderId, true);
+		try {
+			OrderERPSendRetrunQa.sendERP(transferOrder.Id);
+		} catch (Exception e) {}
+
 		Test.stopTest();
 
 	}

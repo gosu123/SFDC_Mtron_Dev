@@ -1061,7 +1061,9 @@ public with sharing class OrderService {
         OrderLineitem__c transferOrderItem = null;
         if(transferOrders != null && transferOrders.size() > 0) {
             transferOrder = transferOrders[0];
-            transferOrderItem = transferOrderItems[0];
+            if(transferOrderItems != null && transferOrderItems.size() > 0) {
+                transferOrderItem = transferOrderItems[0];
+            }
         }
         if(transferOrder == null) {
             returnMap.put('STATUS', 'N');

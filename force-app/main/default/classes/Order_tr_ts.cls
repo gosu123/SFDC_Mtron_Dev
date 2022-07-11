@@ -29,7 +29,7 @@ private class Order_tr_ts {
         User testUser = TestDataBaseFactory.businessOfficeUser.clone(false, true);
 
         testUser.Username  = 'testUsr@user.test.kr';
-        testUser.ProfileId = TestDataUtilFactory.getProfileId('Korea Sales Users');
+        testUser.ProfileId = TestDataUtilFactory.getProfileId('국내영업 사용자');
 
         insert testUser;
 

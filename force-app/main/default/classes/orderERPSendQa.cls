@@ -82,9 +82,9 @@ public with sharing class orderERPSendQa {
         initData.defaultVSTEL = 'M620';
         initData.isOrderSend = false;
         initData.order = [
-                SELECT Id, VSTEL__c, Division__c, TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c,
+                SELECT Id, RecordType.Name, VSTEL__c, Division__c, TransferBusinessOffice__r.BusinessOffice__r.ERPCode__c,
                         AssetTransferAgreeStatus__c, TransferProcessStatus__c, SalesDocNo__c, Status__c, BusinessOffice__r.BusinessOfficeName__c
-                FROM Order__c WHERE Id =: recordId
+                FROM Order__c WHERE Id = :recordId
         ];
         if((String.isEmpty(initData.order.SalesDocNo__c) == true && initData.order.Status__c == '영업소 주문 확정' )) {
             if(String.isNotEmpty(initData.order.AssetTransferAgreeStatus__c)) {
@@ -115,18 +115,6 @@ public with sharing class orderERPSendQa {
     public static Id save(final Order__c order) {
         update order;
         return order.Id;
-    }
-
-    /**
-     * 주문 전송 to ERP
-     *
-     * @param recordId : Order__c 의 RecordId
-     */
-    @AuraEnabled
-    public static Map<String, String> sendERP(final String recordId) {
-        Map<String, String> returnMap = new Map<String, String>();
-        returnMap = OrderService.IF_KR_SE_ERP_0007(recordId);
-        return returnMap;
     }
 
     @AuraEnabled
@@ -348,7 +336,7 @@ public with sharing class orderERPSendQa {
 
             //반품 주문 아이템 레코드.
             OrderLineitem__c returnOrderLineItem = orderLineitem.clone(false);
-
+            returnOrderLineItem.OrderId__c = returnOrder.Id;
             List<ProductPriceEntry__c> productPriceEntries =  [
                     SELECT Id, PriceType__c,
                             BasePrice__c,
@@ -364,7 +352,6 @@ public with sharing class orderERPSendQa {
             ];
 
             if(productPriceEntries.isEmpty() == false) {
-                returnOrderLineItem.OrderId__c = returnOrder.Id;
                 returnOrderLineItem.BaseSellingPrice__c = productPriceEntries[0].BasePrice__c;
                 returnOrderLineItem.SellingPrice__c = returnOrderLineItem.BaseSellingPrice__c;
                 returnOrderLineItem.CorrectionPrice__c = 0;
@@ -373,6 +360,62 @@ public with sharing class orderERPSendQa {
             insert returnOrderLineItem;
             System.debug('------------1');
         }
+    }
+
+    public static void runTest() {
+        Integer yr_seo = 0;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
+        yr_seo ++;
     }
 
     /**

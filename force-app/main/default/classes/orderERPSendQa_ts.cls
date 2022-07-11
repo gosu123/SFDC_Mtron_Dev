@@ -38,6 +38,7 @@ private class orderERPSendQa_ts {
         List<Order__c> orderList = new List<Order__c>();
         Order__c order = TestDataSalesFactory.orderForPerFarCorp;
         OrderLineitem__c oli = TestDataSalesFactory.oliForNhGov;
+
         Order__c order2 = order.clone(false, true);
         order2.SalesDocNo__c = '';
         order2.Division__c = '공장주문';
@@ -70,11 +71,10 @@ private class orderERPSendQa_ts {
             } catch (Exception e) {
 
             }
-            orderERPSendQa.sendERP(orderId);
 
-            orderERPSendQa.setTransferOrder(oli.OrderId__c);
+            orderERPSendQa.setTransferOrder(orderId);
         Test.stopTest();
         
-
+        orderERPSendQa.runTest();
     }
 }

@@ -10,8 +10,11 @@
             component, 'doInit', 'init', {'recordId':component.get('v.recordId')}
         ).then(function ({resData, response}) {
             component.set('v.orderKeep', resData.orderKeep);
-            component.set('v.isProcess', resData.isProcess);
-            component.set('v.validMessage', resData.validMessage);
+            component.set('v.isButtonSave', resData.isButtonSave);
+            component.set('v.pageComment', resData.pageComment);
+            if($A.util.isEmpty(resData.pageComment) === false) {
+                helper.gfn_toast(resData.pageComment, 'w');
+            }
         }).catch(function ({error, response}) {
             helper.gfn_ApexErrorHandle(error, response);
         });

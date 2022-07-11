@@ -61,19 +61,24 @@ private class OrderServiceIF_ts {
 		IfStaticValue__c ifStaticValue = TestDataIFCalloutFactory.createIfStaticValue();
 		IF_Base.IfStaticValue(ifStaticValue);
 
-		//Order__c testOrder = TestDataSalesFactory.orderForPerFarCorp.clone(false, true);
-		//insert testOrder;
-		final Id orderId = TestDataSalesFactory.orderForPerFarCorp.Id;
-
-		TransferOrder__c transferOrder = new TransferOrder__c(
-				OrderLineitem__c = TestDataSalesFactory.oliForPerFarCorp.Id,
-				Order__c = orderId
-		);
-
+		Order__c transferOrder = TestDataSalesFactory.orderForPerFarCorp.clone(false, true);
+		transferOrder.RecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('전수배반품').getRecordTypeId();
+		transferOrder.Division__c = '전수배반품';
+		transferOrder.SalesDocNo__c = '591';
+		transferOrder.OrderMaster__c = TestDataSalesFactory.orderForPerFarCorp.Id;
 		insert transferOrder;
 
+
+		//insert testOrder;
+		//final Id orderId = TestDataSalesFactory.orderForPerFarCorp.Id;
+
+/*		TransferOrder__c transferOrder = new TransferOrder__c(
+				OrderLineitem__c = TestDataSalesFactory.oliForPerFarCorp.Id,
+				Order__c = orderId
+		);*/
+
 		IF_KR_SE_ERP_0007.T_DATA t1 = new IF_KR_SE_ERP_0007.T_DATA();
-		t1.OrderID          = orderId;
+		t1.OrderID          = transferOrder.OrderMaster__c;
 
 		List<IF_KR_SE_ERP_0007.T_DATA> tData = new List<IF_KR_SE_ERP_0007.T_DATA>{t1};
 
@@ -82,7 +87,7 @@ private class OrderServiceIF_ts {
 		Test.setMock(HttpCalloutMock.class, TestDataMockFactory.createSuccessCalloutMock('{"response":{"header":{"TrackingId":"38a0f138-ca02-a983-ce9d-64dd5caf0911","TaskId":"IF_KR_SE_ERP_0007","SenderGroup":"CN","SenderCode":"CXP","ResultCode":"S","IFDatetime":"20190603085741","ErrorMsg":"","ErrorCode":"","DestinationGroup":"CN","DestinationCode":"ERP","ifResult":"S"},"payload":{"TOTAL_RECORD_CNT":"2","t_data":' + tDataString + '}}}'));
 
 		Test.startTest();
-		OrderServiceIF.OrderCancel_ZORT(orderId);
+		OrderServiceIF.OrderCancel_ZORT(transferOrder.OrderMaster__c);
 		Test.stopTest();
 	}
 
@@ -91,20 +96,31 @@ private class OrderServiceIF_ts {
 		IfStaticValue__c ifStaticValue = TestDataIFCalloutFactory.createIfStaticValue();
 		IF_Base.IfStaticValue(ifStaticValue);
 
-		final Id orderId = TestDataSalesFactory.orderForPerFarCorp.Id;
+		Id orderId = TestDataSalesFactory.orderForPerFarCorp.Id;
 
-		TransferOrder__c transferOrder = new TransferOrder__c(
-				OrderLineitem__c = TestDataSalesFactory.oliForPerFarCorp.Id,
-				Order__c = orderId
-		);
-
+		Order__c transferOrder = TestDataSalesFactory.orderForPerFarCorp.clone(false, true);
+		transferOrder.RecordTypeId = Schema.SObjectType.Order__c.getRecordTypeInfosByName().get('전수배반품').getRecordTypeId();
+		transferOrder.Division__c = '전수배반품';
+		transferOrder.SalesDocNo__c = '591';
+		transferOrder.OrderMaster__c = orderId;
 		insert transferOrder;
 
+		OrderLineitem__c oli = new OrderLineitem__c();
+		oli.OrderId__c = transferOrder.Id;
+		oli.ProductId__c = TestDataProductFactory.baseProduct2.Id;
+		insert oli;
+
+/*
+		TransferOrder__c transferOrder = new TransferOrder__c(
+				OrderLineitem__c = TestDataSalesFactory.oliForPerFarCorp.Id,
+				Order__c = transferOrder.OrderMaster__c
+		);*/
+
 		IF_KR_SE_ERP_0007.T_DATA t1 = new IF_KR_SE_ERP_0007.T_DATA();
-		t1.OrderID          = orderId;
+		t1.OrderID          = transferOrder.OrderMaster__c;
 
 		IF_KR_SE_ERP_0007.T_DATA t2 = new IF_KR_SE_ERP_0007.T_DATA();
-		t2.OrderID          = orderId;
+		t2.OrderID          = transferOrder.OrderMaster__c;
 		t2.ErpS_RESULT      = '00';
 		t2.ErpPOSNR         = 'test';
 		t2.SalesDocNo       = 'test';
@@ -119,7 +135,7 @@ private class OrderServiceIF_ts {
 		Test.setMock(HttpCalloutMock.class, TestDataMockFactory.createSuccessCalloutMock('{"response":{"header":{"TrackingId":"38a0f138-ca02-a983-ce9d-64dd5caf0911","TaskId":"IF_KR_SE_ERP_0007","SenderGroup":"CN","SenderCode":"CXP","ResultCode":"S","IFDatetime":"20190603085741","ErrorMsg":"","ErrorCode":"","DestinationGroup":"CN","DestinationCode":"ERP","ifResult":"S"},"payload":{"TOTAL_RECORD_CNT":"2","t_data":' + tDataString + '}}}'));
 
 		Test.startTest();
-		OrderServiceIF.OrderCancel_ZRET(orderId);
+		OrderServiceIF.OrderCancel_ZRET(transferOrder.OrderMaster__c);
 		Test.stopTest();
 	}
 
