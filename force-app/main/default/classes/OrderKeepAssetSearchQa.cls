@@ -10,6 +10,7 @@
   * @reference     :
   * @copyright     : Copyright © I2max. All Rights Reserved.
   * @modification Log
+  * 220711 Jin 		ITVOC-2022-07-0885
   * ===============================================================
   * ver     date                     author              description
   * ===============================================================
@@ -27,7 +28,7 @@ public with sharing class OrderKeepAssetSearchQa {
 	public static I2ComClass.InitData init(String recordId) {
 		InitData initData = new InitData();
 		initData.orderKeep = [
-				SELECT Id, Order__r.OrderProduct__c, Order__r.OrderProduct__r.Name, KeepAsset__c, IsOutAsset__c
+				SELECT Id, Order__r.OrderProduct__c, Order__r.OrderProduct__r.Name, KeepAsset__c, IsOutAsset__c, Order__r.IsOutAsset__c
 				FROM OrderKeep__c
 				WHERE Id = :recordId
 		];
@@ -39,6 +40,9 @@ public with sharing class OrderKeepAssetSearchQa {
 		if(initData.orderKeep.IsOutAsset__c == true) {
 			initData.isButtonSave = false;
 			initData.pageComment = '출하 지시된 주문의 보관 자산은 변경할 수 없습니다.';
+		} else if(initData.orderKeep.Order__r.IsOutAsset__c == true) {
+			initData.isButtonSave = false;
+			initData.pageComment = '이미 보관 처리가 완료되었습니다.';
 		}
 		return initData;
 	}
