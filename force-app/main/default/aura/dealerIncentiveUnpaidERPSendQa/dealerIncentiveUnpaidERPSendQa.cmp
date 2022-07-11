@@ -1,0 +1,54 @@
+<!--
+  * @filename      : dealerIncentiveUnpaidERPSendQa
+  * @projectname   :
+  * @author        : i2max
+  * @date          : 2020-04-16
+  * @group         :
+  * @group-content :
+  * @description   : 판매장려 미지급건 - 전송/취소
+  * @reference     :
+  * @copyright     : Copyright © I2max. All Rights Reserved.
+  * @modification Log
+  * ===============================================================
+  * ver     date            author         description
+  * ===============================================================
+    0.1     2022-07-04     	i2max          Create
+ -->
+<aura:component extends="c:lsSalesBase"
+                implements="flexipage:availableForAllPageTypes,force:lightningQuickActionWithoutHeader,force:hasRecordId"
+                controller="DealerIncentiveUnpaidERPSendQa"
+                description="dealerIncentiveUnpaidERPSendQa">
+
+    <!-- ============================================================================
+    ==== 저장을 위한 임시 출하 레코드
+    ============================================================================= -->
+    <aura:attribute name="dii" type="DealerIncentiveInput__c"  description="판매장려 기표"/>
+    <aura:attribute name="isSend" type="Boolean"  description="처리 유형"/>
+
+    <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
+
+    <lightning:overlayLibrary aura:id="overlayLib"/>
+
+    <c:lacComQuickAction title="판매장려 기표(미지급건) 전송/취소" aura:id="quickAction" hasSelfFooter="{!false}" isSmall="{!true}">
+
+        <div class="slds-m-around_x-large slds-text-align_center">
+            <aura:if isTrue="{!v.isSend}">
+                <h2>판매장려 미지급건 전송 취소 처리 하시겠습니까?</h2>
+            </aura:if>
+            <aura:if isTrue="{!not(v.isSend)}">
+                <h2>판매장려 미지급건 전송 처리 하시겠습니까?</h2>
+            </aura:if>
+
+        </div>
+
+        <aura:set attribute="footer">
+            <aura:if isTrue="{!v.isSend}">
+                <lightning:button aura:id="btnSendCancel" label="저장(취소)" variant="brand" onclick="{!c.doSendCancel}"/>
+            </aura:if>
+            <aura:if isTrue="{!not(v.isSend)}">
+                <lightning:button aura:id="btnSave" label="저장" variant="brand" onclick="{!c.doSend}"/>
+            </aura:if>
+        </aura:set>
+    </c:lacComQuickAction>
+
+</aura:component>
