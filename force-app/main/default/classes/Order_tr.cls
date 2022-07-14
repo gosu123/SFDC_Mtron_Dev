@@ -139,10 +139,10 @@ public without sharing class Order_tr extends TriggerHandler {
         System.debug('========================================');
         for (Order__c r : newList) {
             oldOrder = (Order__c) oldMap.get(r.Id);
-            if (r.Status__c != oldOrder.Status__c && r.Status__c == '영업소 주문 확정' && r.Division__c == '전수배') {
+            if (r.Status__c != oldOrder.Status__c && r.Status__c == '영업소 주문 확정' && r.Division__c == '전수배공급') {
                 orderApproveMap.put(r.Id, r);
                 approveAssets.add(r.TransferMachineNo__c);
-            } else if (r.Status__c != oldOrder.Status__c && r.Status__c == '종료' && r.isOrderCancel__c == true && r.Division__c == '전수배' && r.TransferMachineNo__c != null) {
+            } else if (r.Status__c != oldOrder.Status__c && r.Status__c == '종료' && r.isOrderCancel__c == true && r.Division__c == '전수배공급' && r.TransferMachineNo__c != null) {
                 // 승인 반려시 상태 종료 변경, 주문취소 = true, 주문 구분이 전수배이면,
 //                rejectAssets.add(r.TransferMachineNo__c);
                 rejectAssets.add(

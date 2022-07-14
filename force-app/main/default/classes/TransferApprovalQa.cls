@@ -106,7 +106,7 @@ public without sharing class TransferApprovalQa {
                 assetTransferRequest.Order__r.TransferProcessStatus__c = '승인';
                 assetTransferRequest.Order__r.TransferBusinessOffice__c = assetTransferRequest.TransferDealer__c;
                 assetTransferRequest.Order__r.TransferMachineNo__c = assetTransferRequest.AssetNo__c;
-                assetTransferRequest.Order__r.Division__c = '전수배';
+                assetTransferRequest.Order__r.Division__c = '전수배공급';
 
                 // 해당 Asset 업데이트
                 update assetTransferRequest.AssetNo__r;

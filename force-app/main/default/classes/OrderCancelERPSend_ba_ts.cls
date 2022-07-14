@@ -28,7 +28,7 @@ private class OrderCancelERPSend_ba_ts {
 	static void testBehavior2() {
 		Order__c order = TestDataSalesFactory.orderForNhGov.clone(true, true);
 		order.IsAutoCancel__c = true;
-		order.Division__c = '전수배';
+		order.Division__c = '전수배공급';
 		update order;
 
 		Database.executeBatch(new OrderCancelERPSend_ba(), 1);

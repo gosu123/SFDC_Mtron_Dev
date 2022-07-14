@@ -53,7 +53,7 @@ public with sharing class OrderERPSendRetrunQa {
 				initData.transferOrder.Status__c == '영업소 주문 확정' &&
 				initData.transferOrder.OrderMaster__r.Status__c == '출하' &&
 				String.isEmpty(initData.transferOrder.SalesDocNo__c) == true &&
-				initData.transferOrder.OrderMaster__r.Division__c == '전수배공급' &&
+				initData.transferOrder.Division__c == '전수배반품' &&
 				String.isEmpty(initData.transferOrder.OrderMaster__r.SalesDocNo__c) == false &&
 				initData.transferOrder.OrderMaster__r.TransferProcessStatus__c == '승인' &&
 				initData.transferOrder.OrderMaster__r.AssetTransferAgreeStatus__c == '승인' &&
@@ -63,7 +63,7 @@ public with sharing class OrderERPSendRetrunQa {
 		initData.validMessage = '';
 		if (!initData.isValidOrder && String.isEmpty(initData.transferOrder.SalesDocNo__c) == false) {
 			initData.validMessage  = 'SAP 전수배반품 주문이 완료된 건 입니다.';
-		} else if (initData.transferOrder.OrderMaster__r.Division__c != '전수배공급') {
+		} else if (initData.transferOrder.Division__c == '전수배반품') {
 			initData.validMessage  = '전수배반품 주문만 SAP 전송이 가능 합니다.';
 		} else if (initData.transferOrder.Status__c != '영업소 주문 확정') {
 			initData.validMessage  = '전수배반품 주문은 영업소 주문 확정 상태에서만 전송이 가능 합니다.';

@@ -129,7 +129,7 @@ public without sharing class OrderTransferRequestQa {
             assetTransferRequest.Order__r.TransferProcessStatus__c = '승인';
             assetTransferRequest.Order__r.TransferBusinessOffice__c = assetTransferRequest.TransferDealer__c;
             assetTransferRequest.Order__r.TransferMachineNo__c = assetTransferRequest.AssetNo__c;
-            assetTransferRequest.Order__r.Division__c = '전수배';
+            assetTransferRequest.Order__r.Division__c = '전수배공급';
             assetTransferRequest.OwnerId = transAsset.Account.OwnerId;
             assetTransferRequest.DealerSalesOwner__c   = transferAccount.OwnerId;             // 전배 대리점 영업사원
             assetTransferRequest.DealerSalesManager__c = transferAccount.Owner.ManagerId;     // 전배 대리점 영업소장

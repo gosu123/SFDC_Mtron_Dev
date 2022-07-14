@@ -21,7 +21,7 @@
 
     <aura:attribute name="divisionList" type="List" default="[
         {'label': '공장주문', 'value': '공장주문'},
-        {'label': '전수배주문', 'value': '전수배'}
+        {'label': '전수배주문', 'value': '전수배공급'}
     ]"/>
     <aura:attribute name="purposeOfOrder" type="List" default="[
         {'label': '재고보충', 'value': '재고보충'},
@@ -249,7 +249,7 @@
                             <div>{!v.labelMap.Order__c.vstel__c}</div>
                         </lightning:layoutItem>
                         <lightning:layoutItem size="9" class="slds-align-middle slds-p-top_xx-small slds-p-left_medium slds-text-align_left">
-                            <lightning:inputField aura:id="VSTEL" fieldName="VSTEL__c" value="{!v.wrapperData.order.VSTEL__c}" disabled="{!equals(v.wrapperData.order.Division__c,'전수배')}" variant="label-hidden" />
+                            <lightning:inputField aura:id="VSTEL" fieldName="VSTEL__c" value="{!v.wrapperData.order.VSTEL__c}" disabled="{!equals(v.wrapperData.order.Division__c,'전수배공급')}" variant="label-hidden" />
                         </lightning:layoutItem>
                     </lightning:layout>
                     <lightning:layout horizontalAlign="end">

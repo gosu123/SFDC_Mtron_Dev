@@ -43,7 +43,7 @@ public with sharing class OrderCancelERPSend_ba implements Database.Batchable<SO
 		Map<String, String> returnMap = new Map<String, String>();
 		String callType = '';
 		for(Order__c r : scope) {
-			if(r.Division__c == '전수배' && String.isEmpty(r.ERPOrderCancelStatus__c)) {
+			if(r.Division__c == '전수배공급' && String.isEmpty(r.ERPOrderCancelStatus__c)) {
 				// 전수배 주문 취소
 				callType = 'ZORT';
 				returnMap = OrderServiceIF.OrderCancel_ZORT(r.Id);
