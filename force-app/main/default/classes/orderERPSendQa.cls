@@ -39,15 +39,15 @@ public with sharing class orderERPSendQa {
             get {
                 String message = '';
                 if (!isOrderSend && String.isEmpty(order.SalesDocNo__c) == false) {
-                    message = 'ERP 주문 신청이 완료된 건 입니다.';
+                    message = 'SAP 전송이 완료되었습니다.';
   /*              } else if (order.Division__c != '공장주문') {
                     message = '공장주문만 ERP 전송이 가능 합니다.';*/
                 } else if (order.Status__c == '본사 여신 검토' || order.Status__c == '출하') {
-                    message = '이미 ERP 주문 신청이 처리 되었습니다.';
+                    message = 'SAP 전송이 완료되었습니다.';
                 } else if (order.AssetTransferAgreeStatus__c == '요청') {
-                    message = '전수배 전환 동의 요청 중 상태여서 ERP 전송이 불가합니다.';
+                    message = '전수배 전환 동의 요청 중 상태여서 SAP 전송이 불가합니다.';
                 } else {
-                    message = '영업소 주문 확정 상태에서만 ERP 전송이 가능 합니다.';
+                    message = '영업소 주문 확정 상태에서만 SAP 전송이 가능 합니다.';
                 }
                 return message;
             }
@@ -325,7 +325,22 @@ public with sharing class orderERPSendQa {
             returnOrder.BusinessOfficeRep__c = order.TransferMachineNo__r.Order__r.BusinessOfficeRep__c;
 
             // 출하위치 : 전배 대리점의 영업소 코드
-            returnOrder.VSTEL__c = order.TransferMachineNo__r.Order__r.Dealer__r.BusinessOffice__r.ERPCode__c;
+            Map<String, String> VSTELMap = new Map<String, String>();
+            VSTELMap.put('71I', 'M620');        // M620엽업소
+            VSTELMap.put('71A', 'M621');        // M621경기
+            VSTELMap.put('71C', 'M622');        // M622충북
+            VSTELMap.put('71E', 'M623');        // M623전북
+            VSTELMap.put('71G', 'M624');        // M624경북
+            VSTELMap.put('71B', 'M625');        // M625강원
+            VSTELMap.put('71D', 'M626');        // M626충남
+            VSTELMap.put('71F', 'M627');        // M627전남
+            VSTELMap.put('71H', 'M628');        // M628경남
+
+            if(VSTELMap.containsKey(order.TransferMachineNo__r.Order__r.Dealer__r.BusinessOffice__r.ERPCode__c)) {
+                returnOrder.VSTEL__c = VSTELMap.get(order.TransferMachineNo__r.Order__r.Dealer__r.BusinessOffice__r.ERPCode__c);
+            } else {
+                returnOrder.VSTEL__c = 'M620';
+            }
 
             // ErpCMGST__c : ERP 여신상태도 초기화 한다.
             returnOrder.ErpCMGST__c = null;

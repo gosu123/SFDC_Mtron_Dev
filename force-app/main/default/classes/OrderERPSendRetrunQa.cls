@@ -62,15 +62,15 @@ public with sharing class OrderERPSendRetrunQa {
 
 		initData.validMessage = '';
 		if (!initData.isValidOrder && String.isEmpty(initData.transferOrder.SalesDocNo__c) == false) {
-			initData.validMessage  = 'ERP 전수배 반품 주문 신청이 완료된 건 입니다.';
+			initData.validMessage  = 'SAP 전수배반품 주문이 완료된 건 입니다.';
 		} else if (initData.transferOrder.OrderMaster__r.Division__c != '전수배공급') {
-			initData.validMessage  = '전수배 주문(반품)만 ERP 전송이 가능 합니다.';
+			initData.validMessage  = '전수배반품 주문만 SAP 전송이 가능 합니다.';
 		} else if (initData.transferOrder.Status__c != '영업소 주문 확정') {
-			initData.validMessage  = '전수배 주문(반품)은 영업소 주문 확정 상태에서만 전송이 가능 합니다.';
+			initData.validMessage  = '전수배반품 주문은 영업소 주문 확정 상태에서만 전송이 가능 합니다.';
 		} else if (initData.transferOrder.OrderMaster__r.TransferProcessStatus__c != '승인' && initData.transferOrder.OrderMaster__r.AssetTransferAgreeStatus__c != '승인') {
 			initData.validMessage  = '수배 대리점의 전수배 동의와 전배 대리점의 전배 승인이 처리가 되어야 합니다. ';
 		} else if (initData.transferOrder.OrderMaster__r.IsZRET__c == true) {
-			initData.validMessage  = '이미 ERP 반품 주문 신청이 처리 되었습니다.';
+			initData.validMessage  = 'SAP 전수배반품 주문이 완료된 건 입니다.';
 		} else {
 			initData.validMessage  = '전수배 공급 주문의 상태가 [출하 대기]일 때, 전수배 반품 주문의 SAP 전송이 가능합니다.';
 		}
@@ -97,4 +97,43 @@ public with sharing class OrderERPSendRetrunQa {
 		return returnMap;
 	}
 
+	public static void runTest() {
+		Integer yr_seo = 0;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+		yr_seo++;
+	}
 }

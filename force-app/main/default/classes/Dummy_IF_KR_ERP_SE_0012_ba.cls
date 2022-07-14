@@ -234,6 +234,8 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
                         SoldTo__r.Name,
                         Dealer__r.Name,
                         PODate__c,
+                        Dealer__c,
+                        Dealer__r.BusinessOffice__c,
                         TransferBusinessOffice__c,
                         TransferBusinessOffice__r.BusinessOffice__c,
                         (SELECT
@@ -267,6 +269,8 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
         Map<String, Order__c> transperOrder_Target = new Map<String, Order__c>();
         for(Order__c r : [
                 SELECT Id, SalesDocNo__c,
+                        OrderMaster__r.Dealer__c,
+                        OrderMaster__r.Dealer__r.BusinessOffice__c,
                         OrderMaster__c, OrderMaster__r.TransferBusinessOffice__c, OrderMaster__r.TransferBusinessOffice__r.BusinessOffice__c,
                         (SELECT
                             Id,
@@ -475,28 +479,60 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
                 //============================================================================
                 tmpDelivery.OwnerId = recordOwnerMap.get(dummy.DealerCode__c);
                 System.debug('SalesDocNo ==> ' + dummy.SalesDocNo__c + ', Has : ' + order_Target.get(dummy.SalesDocNo__c));
+
+
+                String customerType = account_Target.get(dummy.DealerCode__c).CustomerType__c;
+                if(customerType == '대리점') {
+                    tmpDelivery.Dealer__c = account_Target.get(dummy.DealerCode__c).Id;
+                    tmpDelivery.BusinessOffice__c = account_Target.get(dummy.DealerCode__c).BusinessOffice__c;
+                } else {
+                    tmpDelivery.Dealer__c = account_Target.get(dummy.DealerCode__c).Dealer__c;
+                    tmpDelivery.BusinessOffice__c = account_Target.get(dummy.DealerCode__c).BusinessOffice__c;
+                }
+                /**
+                 * ITVOC-2022-07-0893 : 2022-07-11
+                 * 출하 Record가 생성될 때, [대리점] Field값은;
+                    SFDC 주문 Record가 있는 출하인 경우, 해당 주문 Record의 [대리점] Field값
+                    SFDC 주문 Record가 없는 출하인 경우, [판매처] Field의 고객 Record의 [대리점] Field값
+                    으로 개선 요청
+                */
+                tmpDelivery.OrderSellIn__c = null;
+                tmpDelivery.OrderItem__c = null;
                 if (order_Target.containsKey(dummy.SalesDocNo__c)) {
+                    tmpDelivery.Dealer__c = order_Target.get(dummy.SalesDocNo__c).Dealer__c;
+                    tmpDelivery.BusinessOffice__c = order_Target.get(dummy.SalesDocNo__c).Dealer__r.BusinessOffice__c;
+
                     tmpDelivery.OrderSellIn__c = order_Target.get(dummy.SalesDocNo__c).Id;
                     if ((order_Target.get(dummy.SalesDocNo__c).OrderProduct__r).size() > 0) {
                         tmpDelivery.OrderItem__c = order_Target.get(dummy.SalesDocNo__c).OrderProduct__r[0].Id;
                     } else {
                         tmpDelivery.OrderItem__c = null;
                     }
-                } else if (orderKeepMap.containsKey(dummy.SalesDocNo__c)) {
+                }
+                if (orderKeepMap.containsKey(dummy.SalesDocNo__c)) {
                     // 보관 출고
                     tmpDelivery.OrderSellIn__c = orderKeepMap.get(dummy.SalesDocNo__c).Order__c;
-                } else if (transperOrder_Target.containsKey(dummy.SalesDocNo__c)) {
+                }
+                if (transperOrder_Target.containsKey(dummy.SalesDocNo__c)) {
                     // 전수배 반품시 처리.
+                    tmpDelivery.Dealer__c = transperOrder_Target.get(dummy.SalesDocNo__c).OrderMaster__r.Dealer__c;
+                    tmpDelivery.BusinessOffice__c = transperOrder_Target.get(dummy.SalesDocNo__c).OrderMaster__r.Dealer__r.BusinessOffice__c;
+
                     tmpDelivery.OrderSellIn__c = transperOrder_Target.get(dummy.SalesDocNo__c).Id;
                     if ((transperOrder_Target.get(dummy.SalesDocNo__c).OrderProduct__r).size() > 0) {
                         tmpDelivery.OrderItem__c = transperOrder_Target.get(dummy.SalesDocNo__c).OrderProduct__r[0].Id;
                     } else {
                         tmpDelivery.OrderItem__c = null;
                     }
-                } else {
+                }
+/*                // 주문 연결이 없는 경우..
+                if(order_Target.containsKey(dummy.SalesDocNo__c) == false &&
+                        orderKeepMap.containsKey(dummy.SalesDocNo__c) == false &&
+                        transperOrder_Target.containsKey(dummy.SalesDocNo__c)
+                ) {
                     tmpDelivery.OrderSellIn__c = null;
                     tmpDelivery.OrderItem__c = null;
-                }
+                }*/
                 if (dummy.DeliveryType__c == '전수배출고' || dummy.DeliveryType__c == '전수배반품') {
                     tmpDelivery.Division__c = '전수배 주문';
                     if (dummy.DeliveryType__c == '전수배출고' && order_Target.containsKey(dummy.SalesDocNo__c)) {
@@ -517,20 +553,7 @@ public class Dummy_IF_KR_ERP_SE_0012_ba extends Dummy_IF_Batch {
                 tmpDelivery.DeliveryType__c = dummy.DeliveryType__c; // 출하유형 todo:배포전
                 tmpDelivery.DeliveryName__c = account_Target.containsKey(dummy.DeliveryCode__c) ? account_Target.get(dummy.DeliveryCode__c).Name : null; // 텍스트(255) : DeliveryCode__c -> Account.ERPCode__c
                 tmpDelivery.DeliveryCode__c = dummy.DeliveryCode__c; // 텍스트(20) : DeliveryCode__c
-                String customerType;
 
-                /**
-                 * 2022-04-04
-                 *
-                */
-                customerType = account_Target.get(dummy.DealerCode__c).CustomerType__c;
-                if(customerType == '대리점') {
-                    tmpDelivery.Dealer__c = account_Target.get(dummy.DealerCode__c).Id;
-                    tmpDelivery.BusinessOffice__c = account_Target.get(dummy.DealerCode__c).BusinessOffice__c;
-                } else {
-                    tmpDelivery.Dealer__c = account_Target.get(dummy.DealerCode__c).Dealer__c;
-                    tmpDelivery.BusinessOffice__c = account_Target.get(dummy.DealerCode__c).BusinessOffice__c;
-                }
 /*
                 if (account_Target.get(dummy.DealerCode__c).BusinessOffice__r.ERPCode__c == '71I') {
                     // 71I : 영업지원

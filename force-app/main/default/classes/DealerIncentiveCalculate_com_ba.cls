@@ -408,6 +408,7 @@ public without sharing class DealerIncentiveCalculate_com_ba {
 								AddSalesIncentiveItem__c,
 								Asset__c,
 								Asset__r.Name,
+								Asset__r.BatchNo__c,
 								CalculationDate__c,
 								Dealer__c,
 								Dealer__r.ERPCode__c,

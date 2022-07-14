@@ -19,6 +19,7 @@
 public without sharing class Order_tr extends TriggerHandler {
 
     public override void beforeInsert() {
+        this.preValidCheckInsert((List<Order__c>)Trigger.new);
         this.preOrderCheckInsert((List<Order__c>)Trigger.new);
     }
 
@@ -36,6 +37,17 @@ public without sharing class Order_tr extends TriggerHandler {
         this.orderKeepApprovalComplete(Trigger.new, Trigger.oldMap);
     }
 
+    private void preValidCheckInsert(List<Order__c> orderList){
+        for (Order__c orderTemp : orderList) {
+            if(String.isEmpty(orderTemp.Division__c) == true ||
+                    String.isEmpty(orderTemp.Status__c) == true ||
+                    orderTemp.OrderProduct__c == null
+            ) {
+                orderTemp.addError('필수값이 지정 되지 않았습니다. 정상적인 주문 프로세스로 진행 해주세요.');
+                return;
+            }
+        }
+    }
 
     private void preOrderCheckInsert(List<Order__c> orderList){
         for (Order__c orderTemp : orderList) {
@@ -43,7 +55,7 @@ public without sharing class Order_tr extends TriggerHandler {
                 if(orderTemp.OrderScheduleDate__c == null) {
                     orderTemp.OrderScheduleDate__c = orderTemp.DeliveryDate__c;
                 }
-                if (orderTemp.OrderScheduleDate__c.toStartOfMonth() >= Date.today().toStartOfMonth().addMonths(3)) {
+                if (orderTemp.OrderScheduleDate__c != null && orderTemp.OrderScheduleDate__c.toStartOfMonth() >= Date.today().toStartOfMonth().addMonths(3)) {
                     orderTemp.IsPreOrder__c = true;
                 }
             }

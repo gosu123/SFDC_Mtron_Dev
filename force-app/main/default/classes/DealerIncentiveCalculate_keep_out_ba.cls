@@ -40,6 +40,7 @@ public class DealerIncentiveCalculate_keep_out_ba implements Database.Batchable<
 							DeliveryType__c,
 							AssetId__c,
 							AssetId__r.Name,
+							AssetId__r.BatchNo__c,
 							AssetId__r.InventoryType__c,
 							AssetId__r.Product2.ProductDivision__c,
 							AssetId__r.Product2.NhFeeAmt__c,

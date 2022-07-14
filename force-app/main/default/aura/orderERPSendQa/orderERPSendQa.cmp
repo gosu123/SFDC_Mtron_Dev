@@ -13,13 +13,14 @@
     <aura:attribute name="isSending" type="Boolean"  default="false" description="ERP 처리중"/>
     <aura:attribute name="isTransferOrder" type="Boolean"  description="ERP 전송 가능 여부"/>
     <aura:attribute name="validMessage" type="String"  description="체크 메세지"/>
+    <aura:attribute name="pageTitle"     type="String"  description="제목"/>
 
 
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
 
     <lightning:overlayLibrary aura:id="overlayLib"/>
 
-    <c:lacComQuickAction title="ERP 주문 전송" aura:id="quickAction" hasSelfFooter="{!false}" isSmall="{!true}">
+    <c:lacComQuickAction title="{!v.pageTitle}" aura:id="quickAction" hasSelfFooter="{!false}" isSmall="{!true}">
         <aura:if isTrue="{!v.isOrderSend}">
             <div class="slds-m-around_x-large slds-text-align_center">
                 <lightning:recordEditForm aura:id="OrderForm" objectApiName="Order__c" recordId="{!v.recordId}"

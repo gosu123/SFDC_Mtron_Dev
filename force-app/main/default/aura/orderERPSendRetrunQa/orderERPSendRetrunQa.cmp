@@ -9,12 +9,13 @@
 
     <aura:attribute name="isValidOrder" type="Boolean"  description="ERP 전송 가능 여부"/>
     <aura:attribute name="validMessage" type="String"  description="체크 메세지"/>
+    <aura:attribute name="pageTitle"     type="String"  description="제목"/>
 
     <aura:handler name="init" value="{!this}" action="{!c.doInit}"/>
 
     <lightning:overlayLibrary aura:id="overlayLib"/>
 
-    <c:lacComQuickAction title="ERP 주문(반품) 전송" aura:id="quickAction" hasSelfFooter="{!false}" isSmall="{!true}">
+    <c:lacComQuickAction title="{!v.pageTitle}" aura:id="quickAction" hasSelfFooter="{!false}" isSmall="{!true}">
         <aura:if isTrue="{!v.isValidOrder}">
             <div class="slds-m-around_x-large slds-text-align_center">
                 전수배 반품 주문 전송을 진행 하시겠습니까?

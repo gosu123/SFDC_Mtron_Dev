@@ -46,7 +46,7 @@ public without sharing class OrderAssetDeliveryQa {
                         fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
                         PurposeOfOrder__c, OrderScheduleDate__c, DeliverySeq__c, Status__c, IsInAsset__c, IsOutAsset__c,
                         (
-                            SELECT Id, SalesDocNo__c FROM OrderTransferReturns__r LIMIT 1
+                            SELECT Id, SalesDocNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, ru_SellingPrice__c FROM OrderTransferReturns__r LIMIT 1
                         ),
                         (
                             SELECT Id, SalesDocNo__c, IsOutAsset__c, KeepAsset__r.Name, KeepAsset__r.BatchNo__c, KeepAsset__r.ErpLGORT__c FROM OrderKeep_Order__r LIMIT 1
@@ -95,6 +95,15 @@ public without sharing class OrderAssetDeliveryQa {
                     for(Order__c to : initData.order.OrderTransferReturns__r) {
                         //  @TODO : 전수배반품 기대의 주문의 공급 가격과, 전수배반품 레코드 안에 있는 공급 가격  비교
                         //  전진 주임님....
+                        if(to.TransferMachineNo__r.Order__r.ru_SellingPrice__c == null || to.ru_SellingPrice__c == null
+                            || to.TransferMachineNo__r.Order__r.ru_SellingPrice__c <= 0 || to.ru_SellingPrice__c <= 0
+                        ) {
+                            initData.isProcess = false;
+                            initData.validMessage = '과거 공급 시점의 주문이 SFDC에 존재하지 않습니다. 시스템 관리자에게 문의하세요.';
+                        } else if(to.TransferMachineNo__r.Order__r.ru_SellingPrice__c != to.ru_SellingPrice__c) {
+                            initData.isProcess = false;
+                            initData.validMessage = '전수배 반품 주문의 반품금액이 과거 공급가격과 일치하지 않습니다.';
+                        }
                         if(to.SalesDocNo__c == null) {
                             initData.isProcess = false;
                             initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';

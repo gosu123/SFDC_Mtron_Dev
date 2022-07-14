@@ -4,6 +4,13 @@ private class Order_tr_ts {
     @IsTest
     static void testBehavior() {
 
+        Order__c faileOrder = new Order__c();
+        try {
+            insert faileOrder;
+        } catch(Exception e) {
+            
+        }
+
         Order__c updateOrderForPer = TestDataSalesFactory.orderForPerFarCorp;
         updateOrderForPer.Status__c               = '영업소 주문 확정';
         updateOrderForPer.TransferMachineNo__c    = TestDataSalesFactory.baseAsset.Id;

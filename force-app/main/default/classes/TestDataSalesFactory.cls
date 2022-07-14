@@ -221,6 +221,7 @@ public class TestDataSalesFactory {
         order.ErpS_MESSAGE__c           = '';
         order.BusinessOfficeRep__c      = TestDataBaseFactory.businessOfficeUser.Id;
         order.BusinessOffice__c         = TestDataBaseFactory.businessOfficeAccount.Id;
+        order.OrderProduct__c           = TestDataProductFactory.baseProduct2.Id;
 
         if(isInsert) insert order;
 

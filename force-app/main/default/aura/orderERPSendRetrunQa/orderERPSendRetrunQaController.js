@@ -29,6 +29,7 @@
         ).then(function ({resData, response}) {
             component.set('v.isValidOrder', resData.isValidOrder);
             component.set('v.validMessage', resData.validMessage);
+            component.set('v.pageTitle', resData.transferOrder.Division__c + ' SAP 전송');
         }).catch(function ({error, response}) {
             helper.gfn_ApexErrorHandle(error, response);
         });

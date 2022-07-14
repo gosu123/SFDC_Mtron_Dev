@@ -32,6 +32,7 @@
             component.set('v.isOrderSend', resData.isOrderSend);
             component.set('v.isTransferOrder', resData.isTransferOrder);
             component.set('v.validMessage', resData.validMessage);
+            component.set('v.pageTitle', resData.order.Division__c + ' SAP 전송');
 
             // component.find("VSTEL").set('v.value', resData.defaultVSTEL);
         }).catch(function (error) {

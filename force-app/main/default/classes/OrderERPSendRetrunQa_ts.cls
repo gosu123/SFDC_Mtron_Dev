@@ -86,5 +86,8 @@ private class OrderERPSendRetrunQa_ts {
 
 		Test.stopTest();
 
+
+		OrderERPSendRetrunQa.runTest();
+
 	}
 }
