@@ -17,6 +17,7 @@
     0.2     2022-02-17      i2max          전수배 출하 --> 출하지시로 변경(ITVOC-2022-01-0633)
     0.3     2022-03-22      i2max          ITVOC-2022-03-0717 : 보관출하
     0.3     2022-05-13      i2max          ITVOC-2022-04-0777 : 우선순위 로직 개선
+    0.4     2022-07-18      ITC            ITVOC-2022-06-0881 : 전수배 주문의 [출하 지시] 時 Validation
 ****************************************************************************************/
 public without sharing class OrderAssetDeliveryQa {
 
@@ -42,8 +43,8 @@ public without sharing class OrderAssetDeliveryQa {
         InitData initData = new InitData();
 
         initData.order = [
-                SELECT Id, SalesDocNo__c, TransferMachineNo__r.Name, TransferMachineNo__r.BatchNo__c, OrderProduct__c, Division__c, VSTEL__c,
-                        fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
+                SELECT Id, SalesDocNo__c, TransferMachineNo__r.Name, TransferMachineNo__r.BatchNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, 
+                        OrderProduct__c, Division__c, VSTEL__c, fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
                         PurposeOfOrder__c, OrderScheduleDate__c, DeliverySeq__c, Status__c, IsInAsset__c, IsOutAsset__c,
                         (
                             SELECT Id, SalesDocNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, ru_SellingPrice__c FROM OrderTransferReturns__r LIMIT 1
@@ -75,7 +76,7 @@ public without sharing class OrderAssetDeliveryQa {
 
         if(initData.order.SalesDocNo__c == null) {
             initData.isProcess = false;
-            initData.validMessage = 'ERP 주문 미처리건 입니다.';
+            initData.validMessage = 'SAP 전송이 되지 않았습니다.';
             return initData;
         }
         if(initData.order.Status__c == '출하') {
@@ -89,24 +90,25 @@ public without sharing class OrderAssetDeliveryQa {
 
                 if(initData.order.OrderTransferReturns__r.isEmpty() == true) {
                     initData.isProcess = false;
-                    initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';
+                    initData.validMessage = 'SAP 전송이 되지 않았습니다.';
                     return initData;
                 } else {
                     for(Order__c to : initData.order.OrderTransferReturns__r) {
                         //  @TODO : 전수배반품 기대의 주문의 공급 가격과, 전수배반품 레코드 안에 있는 공급 가격  비교
                         //  전진 주임님....
-                        if(to.TransferMachineNo__r.Order__r.ru_SellingPrice__c == null || to.ru_SellingPrice__c == null
+                        if(to.SalesDocNo__c == null) {
+                            initData.isProcess = false;
+                            initData.validMessage = '전수배반품 주문의 SAP 전송이 되지 않았습니다.';
+                            return initData;
+                        } else if(to.TransferMachineNo__r.Order__r.ru_SellingPrice__c == null || to.ru_SellingPrice__c == null
                             || to.TransferMachineNo__r.Order__r.ru_SellingPrice__c <= 0 || to.ru_SellingPrice__c <= 0
                         ) {
                             initData.isProcess = false;
                             initData.validMessage = '과거 공급 시점의 주문이 SFDC에 존재하지 않습니다. 시스템 관리자에게 문의하세요.';
+                            return initData;
                         } else if(to.TransferMachineNo__r.Order__r.ru_SellingPrice__c != to.ru_SellingPrice__c) {
                             initData.isProcess = false;
                             initData.validMessage = '전수배 반품 주문의 반품금액이 과거 공급가격과 일치하지 않습니다.';
-                        }
-                        if(to.SalesDocNo__c == null) {
-                            initData.isProcess = false;
-                            initData.validMessage = '반품 주문 처리가 되지 않았습니다. ERP 주문(반품)을 먼저 진행 해주세요.';
                             return initData;
                         } else {
                             initData.isProcess = true;
