@@ -154,7 +154,7 @@ public without sharing class OrderAssetDeliveryQa {
         Integer myDeliverySeq;
         List<Order__c> tmpOrderList;
         for(Order__c r : orderDeliverySeqs) {
-            deliverySeq = Integer.valueOf(r.DeliverySeq__c);
+            deliverySeq = r.DeliverySeq__c == null ? 1 : Integer.valueOf(r.DeliverySeq__c);
             if(firstDeliverySeq == null) firstDeliverySeq = deliverySeq;
             if(r.Id == initData.order.Id) {
                 // 내 순번 찾기.
