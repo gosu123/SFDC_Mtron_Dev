@@ -139,7 +139,7 @@ public without sharing class OrderAssetDeliveryQa {
                         fm_RecordTypeOrder__c, fm_OrderScheduleYearMonth__c,  fm_IsPreOrder__c,   fm_OrderPurposeOrder__c,   OrderScheduleDate__c,  CreatedDate
                 FROM Order__c
                 WHERE Status__c != '종료'
-                AND Division__c != '전수배반품'
+                AND Division__c = '공장주문'
                 AND isOrderCancel__c = FALSE
                 AND IsOutAsset__c = FALSE
                 AND VSTEL__c IN ('', 'M620')
@@ -147,8 +147,31 @@ public without sharing class OrderAssetDeliveryQa {
                 AND OrderProduct__c = :initData.order.OrderProduct__c
                 ORDER BY DeliverySeq__c, fm_RecordTypeOrder__c, fm_OrderScheduleYearMonth__c, fm_IsPreOrder__c, fm_OrderPurposeOrder__c, OrderScheduleDate__c, CreatedDate
         ];
-//        System.debug(JSON.serializePretty(orderDeliverySeqs));
-        Integer seq = 1;
+        System.debug(JSON.serializePretty(orderDeliverySeqs));
+        Map<Integer, List<Order__c>> orderDeliverySeqMap = new Map<Integer, List<Order__c>>();
+        Integer deliverySeq;
+        Integer firstDeliverySeq;
+        Integer myDeliverySeq;
+        List<Order__c> tmpOrderList;
+        for(Order__c r : orderDeliverySeqs) {
+            deliverySeq = Integer.valueOf(r.DeliverySeq__c);
+            if(firstDeliverySeq == null) firstDeliverySeq = deliverySeq;
+            if(r.Id == initData.order.Id) {
+                // 내 순번 찾기.
+                myDeliverySeq = deliverySeq;
+            }
+            if(orderDeliverySeqMap.containsKey(deliverySeq)) {
+                tmpOrderList = orderDeliverySeqMap.get(deliverySeq);
+                tmpOrderList.add(r);
+                orderDeliverySeqMap.put(deliverySeq, tmpOrderList);
+            } else {
+                orderDeliverySeqMap.put(deliverySeq, new List<Order__c>{r});
+            }
+            deliverySeq++;
+        }
+
+        System.debug('@@ ==> ' + firstDeliverySeq + ' / ' + myDeliverySeq);
+
         Boolean isPreDeliveryTarget = false;
         initData.notiTargetOrders = new List<Order__c>();
         initData.isCustomNoti = false;
@@ -156,31 +179,59 @@ public without sharing class OrderAssetDeliveryQa {
             if(String.isEmpty(initData.order.VSTEL__c) || initData.order.VSTEL__c == 'M620') {
                 // 전주 공장에서 출하되는 케이스만 순번처리 한다.
                 if (initData.order.Division__c == '공장주문') {
-                    for (Order__c target : orderDeliverySeqs) {
-                        System.debug('순번 : ' + seq + ' / ' + isPreDeliveryTarget);
-                        if (target.Id == initData.order.Id) {
-                            break;
-                        }
-                        // 이전 데이터중 출하대기 상태건이 있다.
-                        seq++;
-                        if(target.Status__c == '출하') {
-                            isPreDeliveryTarget = true;
-                            break;
-                        }
-                        initData.notiTargetOrders.add(target);
-
-                    }
-
-                    // 내 순번이 1번이 아니면 추가 체크 한다.
-                    if(seq != 1) {
-                        if (isPreDeliveryTarget == true) {
-                            // 이전 데이터중 출하대기건이 있으면 출하 불가.
-                            initData.isProcess = false;
-                            initData.validMessage = '동일 모델의 주문 中 본 주문의 우선순위가 가장 우선하거나, 보다 우선하는 주문 중 출하 대기 상태의 주문이 없는 경우만 출하 지시가 가능합니다.';
-                        } else {
-                            initData.isCustomNoti = true;
+                    if(firstDeliverySeq == myDeliverySeq) {
+                        // 내 순번이 처음 시작이면 처리
+                    } else {
+                        // 내 순번보다 앞에 데이터가 있으면 처리
+                        for(Integer seq = firstDeliverySeq; seq < myDeliverySeq; seq++) {
+                            for (Order__c target : orderDeliverySeqMap.get(seq)) {
+                                if(target.Status__c == '출하') {
+                                    isPreDeliveryTarget = true;
+                                    break;
+                                }
+                                initData.notiTargetOrders.add(target);
+                            }
+                            if (isPreDeliveryTarget == true) {
+                                // 이전 데이터중 출하대기건이 있으면 출하 불가.
+                                initData.isProcess = false;
+                                initData.validMessage = '동일 모델의 주문 中 본 주문의 우선순위가 가장 우선하거나, 보다 우선하는 주문 중 출하 대기 상태의 주문이 없는 경우만 출하 지시가 가능합니다.';
+                                break;
+                            } else {
+                                initData.isCustomNoti = true;
+                            }
                         }
                     }
+                    /*if(orderDeliverySeqMap.containsKey(deliverySeq)) {
+                        // 해당 순번이 있다.
+                        for (Order__c target : orderDeliverySeqMap.get(deliverySeq)) {
+                            System.debug('순번 : ' + deliverySeq + ' / ' + isPreDeliveryTarget);
+                            if (target.Id == initData.order.Id) {
+                                break;
+                            }
+                            // 이전 데이터중 출하대기 상태건이 있다.
+                            seq++;
+                            if(target.Status__c == '출하') {
+                                isPreDeliveryTarget = true;
+                                break;
+                            }
+                            initData.notiTargetOrders.add(target);
+
+                        }
+
+                        // 내 순번이 1번이 아니면 추가 체크 한다.
+                        if(seq != 1) {
+                            if (isPreDeliveryTarget == true) {
+                                // 이전 데이터중 출하대기건이 있으면 출하 불가.
+                                initData.isProcess = false;
+                                initData.validMessage = '동일 모델의 주문 中 본 주문의 우선순위가 가장 우선하거나, 보다 우선하는 주문 중 출하 대기 상태의 주문이 없는 경우만 출하 지시가 가능합니다.';
+                            } else {
+                                initData.isCustomNoti = true;
+                            }
+                        }
+                    } else {
+                        // 없다.
+                    }*/
+
                 }
             }
         }

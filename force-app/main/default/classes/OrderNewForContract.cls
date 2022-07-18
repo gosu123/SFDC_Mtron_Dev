@@ -89,6 +89,13 @@ public with sharing class OrderNewForContract {
         // 주문 유형
         wrapperData.order.ErpAUART__c = 'OR';
 
+        // 주문 제품
+        for(OrderLineitem__c r : wrapperData.orderLineItemList) {
+            wrapperData.order.OrderProduct__c = r.ProductId__c;
+        }
+        if(wrapperData.order.OrderProduct__c == null) {
+            throw new AuraHandledException('제품을 선택 해주세요');
+        }
         insert wrapperData.order;
 
         wrapperData.orderLineItemList[0].ProductId__r = null;

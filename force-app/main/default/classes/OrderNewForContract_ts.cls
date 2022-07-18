@@ -31,7 +31,20 @@ private class OrderNewForContract_ts {
         // Logic Test
         //==============================================================================
         System.assertNotEquals(null, OrderNewForContract.init());
-        System.assertNotEquals(null, OrderNewForContract.save(wrapperData));
         System.assertNotEquals(null, OrderNewForContract.getTargetSoldToId(TestDataBaseFactory.personAccount.Id));
+        try {
+            OrderNewForContract.save(wrapperData);
+        } catch (Exception e) {
+
+        }
+        wrapperData.order.Division__c = '공장주문';
+        wrapperData.order.Status__c = '종료';
+        wrapperData.order.OrderProduct__c = TestDataProductFactory.baseProduct2.Id;
+        try {
+            OrderNewForContract.save(wrapperData);
+        } catch (Exception e) {
+
+        }
+        //System.assertNotEquals(null, OrderNewForContract.save(wrapperData));
     }
 }
