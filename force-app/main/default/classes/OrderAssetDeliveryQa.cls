@@ -43,8 +43,9 @@ public without sharing class OrderAssetDeliveryQa {
         InitData initData = new InitData();
 
         initData.order = [
-                SELECT Id, SalesDocNo__c, TransferMachineNo__r.Name, TransferMachineNo__r.BatchNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, 
-                        OrderProduct__c, Division__c, VSTEL__c, fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
+                SELECT Id, SalesDocNo__c, TransferMachineNo__r.Name, TransferMachineNo__r.BatchNo__c, OrderProduct__c, Division__c, VSTEL__c,
+                        TransferMachineNo__r.Order__r.ru_SellingPrice__c,
+                        fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
                         PurposeOfOrder__c, OrderScheduleDate__c, DeliverySeq__c, Status__c, IsInAsset__c, IsOutAsset__c,
                         (
                             SELECT Id, SalesDocNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, ru_SellingPrice__c FROM OrderTransferReturns__r LIMIT 1
@@ -186,20 +187,23 @@ public without sharing class OrderAssetDeliveryQa {
                     } else {
                         // 내 순번보다 앞에 데이터가 있으면 처리
                         for(Integer seq = firstDeliverySeq; seq < myDeliverySeq; seq++) {
-                            for (Order__c target : orderDeliverySeqMap.get(seq)) {
-                                if(target.Status__c == '출하') {
-                                    isPreDeliveryTarget = true;
-                                    break;
+                            System.debug(seq + ' / ' + myDeliverySeq + '/ ' + orderDeliverySeqMap.containsKey(seq));
+                            if(orderDeliverySeqMap.containsKey(seq)) {
+                                for (Order__c target : orderDeliverySeqMap.get(seq)) {
+                                    if (target.Status__c == '출하') {
+                                        isPreDeliveryTarget = true;
+                                        break;
+                                    }
+                                    initData.notiTargetOrders.add(target);
                                 }
-                                initData.notiTargetOrders.add(target);
-                            }
-                            if (isPreDeliveryTarget == true) {
-                                // 이전 데이터중 출하대기건이 있으면 출하 불가.
-                                initData.isProcess = false;
-                                initData.validMessage = '동일 모델의 주문 中 본 주문의 우선순위가 가장 우선하거나, 보다 우선하는 주문 중 출하 대기 상태의 주문이 없는 경우만 출하 지시가 가능합니다.';
-                                break;
-                            } else {
-                                initData.isCustomNoti = true;
+                                if (isPreDeliveryTarget == true) {
+                                    // 이전 데이터중 출하대기건이 있으면 출하 불가.
+                                    initData.isProcess = false;
+                                    initData.validMessage = '동일 모델의 주문 中 본 주문의 우선순위가 가장 우선하거나, 보다 우선하는 주문 중 출하 대기 상태의 주문이 없는 경우만 출하 지시가 가능합니다.';
+                                    break;
+                                } else {
+                                    initData.isCustomNoti = true;
+                                }
                             }
                         }
                     }
