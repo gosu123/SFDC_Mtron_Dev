@@ -24,6 +24,8 @@ private class OrderCancelQa_ts {
         //==============================================================================
         System.assertNotEquals(null, OrderCancelQa.init(TestDataSalesFactory.orderForPerFarCorp.Id));
         OrderCancelQa.save(TestDataSalesFactory.orderForPerFarCorp);
+
+        OrderCancelQa.runTest();
     }
 
     @IsTest

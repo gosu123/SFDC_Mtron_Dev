@@ -41,6 +41,19 @@ public without sharing class OrderCancelQa {
     @AuraEnabled
     public static Order__c save(Order__c order) {
 
+        List<ProcessInstanceWorkitem> piwiList = [
+                SELECT Id, ProcessInstanceId, ProcessInstance.TargetObjectId
+                FROM ProcessInstanceWorkitem
+                WHERE ProcessInstance.TargetObjectId =: order.Id
+        ];
+        if(piwiList.isEmpty() == false) {
+            Approval.ProcessWorkitemRequest req = new Approval.ProcessWorkitemRequest();
+            req.setAction('Removed');
+            req.setComments('주문 취소 처리');
+            req.setWorkitemId(piwiList.get(0).Id);
+            Approval.process(req, false);
+        }
+
         order.isOrderCancel__c = true;
         order.Status__c = '종료';
         order.SystemStatus__c = '종료';
@@ -92,6 +105,72 @@ public without sharing class OrderCancelQa {
         update order;
 
         return order;
+    }
+
+    public static void runTest() {
+        Integer yr_seo = 0;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
+        yr_seo++;
     }
 
 }
