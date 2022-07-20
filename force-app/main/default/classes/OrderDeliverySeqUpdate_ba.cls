@@ -22,6 +22,14 @@ public with sharing class OrderDeliverySeqUpdate_ba implements Database.Batchabl
     public String query;
     public Boolean isNextBatch = false;
 
+	public OrderDeliverySeqUpdate_ba() {
+		this(true);
+	}
+
+	public OrderDeliverySeqUpdate_ba(Boolean isNextBatch) {
+		this.isNextBatch = isNextBatch;
+	}
+
     public Database.QueryLocator start(Database.BatchableContext BC) {
 
 		Set<String> productCodes = new Set<String>();
