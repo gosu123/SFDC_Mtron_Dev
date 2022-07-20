@@ -400,7 +400,7 @@ public without sharing class OrderNewQa {
                     if(Test.isRunningTest() == false && tempUser.BusinessOffice__c == null) {
                         throw new AuraHandledException('사용자 설정에서 담당 영업소를 지정 해주세요.');
                     } else {
-                        List<Account> tmpBusinessOffices = [SELECT Id FROM Account WHERE ERPCode__c = :tempUser.BusinessOffice__c LIMIT 1];
+                        List<Account> tmpBusinessOffices = [SELECT Id, SalesGroupCode__c FROM Account WHERE ERPCode__c = :tempUser.BusinessOffice__c LIMIT 1];
                         if(tmpBusinessOffices.isEmpty() == false) tmpBusinessOffice = tmpBusinessOffices[0];
                     }
 
@@ -431,7 +431,8 @@ public without sharing class OrderNewQa {
                     // 영업팀
                     wrapperData.order.ErpVKBUR__c = '5600';
                     // 영업그룹
-                    wrapperData.order.ErpVKGRP__c = tempAcc.BusinessOffice__r.SalesGroupCode__c;
+                    // ITVOC-2022-07-0901 / 2022. 7. 15. 오후 1:30 / 오종택
+                    wrapperData.order.ErpVKGRP__c = tmpBusinessOffice != null ? tmpBusinessOffice.SalesGroupCode__c : tempAcc.BusinessOffice__r.SalesGroupCode__c;
                     // 주문 유형
                     wrapperData.order.ErpAUART__c = 'OR';
                 }
