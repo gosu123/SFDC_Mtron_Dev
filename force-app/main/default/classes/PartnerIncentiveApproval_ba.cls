@@ -75,7 +75,7 @@ public class PartnerIncentiveApproval_ba implements Database.Batchable<SObject>,
 	}
 
 	public void finish(Database.BatchableContext BC) {
-		if(isNextBatch) Database.executeBatch(new DealerIncentiveUnpaidERPSend_ba(), 20);
+		if(isNextBatch) Database.executeBatch(new DealerIncentiveERPSendPartner_ba(), 20);
 	}
 
 }
