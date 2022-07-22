@@ -47,12 +47,12 @@ public without sharing class OrderAssetDeliveryQa {
                         TransferMachineNo__r.Order__r.ru_SellingPrice__c,
                         fm_OrderScheduleYearMonth__c,fm_RecordTypeOrder__c, IsKeepProcess__c, KeppApprovalStatus__c,
                         PurposeOfOrder__c, OrderScheduleDate__c, DeliverySeq__c, Status__c, IsInAsset__c, IsOutAsset__c,
-                        (
-                            SELECT Id, SalesDocNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, ru_SellingPrice__c FROM OrderTransferReturns__r LIMIT 1
-                        ),
-                        (
-                            SELECT Id, SalesDocNo__c, IsOutAsset__c, KeepAsset__r.Name, KeepAsset__r.BatchNo__c, KeepAsset__r.ErpLGORT__c FROM OrderKeep_Order__r LIMIT 1
-                        )
+                (
+                        SELECT Id, SalesDocNo__c, TransferMachineNo__r.Order__r.ru_SellingPrice__c, ru_SellingPrice__c FROM OrderTransferReturns__r LIMIT 1
+                ),
+                (
+                        SELECT Id, SalesDocNo__c, IsOutAsset__c, KeepAsset__r.Name, KeepAsset__r.BatchNo__c, KeepAsset__r.ErpLGORT__c FROM OrderKeep_Order__r LIMIT 1
+                )
                 FROM Order__c WHERE Id =: recordId];
 
         initData.isProcess = false;
@@ -102,7 +102,7 @@ public without sharing class OrderAssetDeliveryQa {
                             initData.validMessage = '전수배반품 주문의 SAP 전송이 되지 않았습니다.';
                             return initData;
                         } else if(to.TransferMachineNo__r.Order__r.ru_SellingPrice__c == null || to.ru_SellingPrice__c == null
-                            || to.TransferMachineNo__r.Order__r.ru_SellingPrice__c <= 0 || to.ru_SellingPrice__c <= 0
+                                || to.TransferMachineNo__r.Order__r.ru_SellingPrice__c <= 0 || to.ru_SellingPrice__c <= 0
                         ) {
                             initData.isProcess = false;
                             initData.validMessage = '과거 공급 시점의 주문이 SFDC에 존재하지 않습니다. 시스템 관리자에게 문의하세요.';
@@ -253,8 +253,8 @@ public without sharing class OrderAssetDeliveryQa {
 
         // 재고보충에 전주 공장 출하이면 : 국내영업본부 + 혁신파트(시스템관리자) 만 처리 가능.
         if(
-            initData.order.Division__c == '공장주문' &&
-            (initData.order.VSTEL__c == 'M620' || String.isEmpty(initData.order.VSTEL__c) == true))
+                initData.order.Division__c == '공장주문' &&
+                        (initData.order.VSTEL__c == 'M620' || String.isEmpty(initData.order.VSTEL__c) == true))
         {
             if(initData.isProcess == true && targetUsers.isEmpty() == true) {
                 initData.isProcess = false;
@@ -380,10 +380,10 @@ public without sharing class OrderAssetDeliveryQa {
 
         try {
             /*
-			주문-202205-00000598(MT4.58-CQTLEDPS)은
-			추가여신 검토중 사유로 차순위
-			주문이 먼저 출하되었습니다.
-			 */
+         주문-202205-00000598(MT4.58-CQTLEDPS)은
+         추가여신 검토중 사유로 차순위
+         주문이 먼저 출하되었습니다.
+          */
             for (Order__c target : notiTargetOrders) {
                 if (target.Status__c == '대리점 주문 신청') {
                     typeString = '대리점 제출 이전';
