@@ -7,7 +7,7 @@
   * @group-content :
   * @description   : 처리일자 : 매월 25일
                      지난달 까지 출하 처리 하지 못한 건들을 주문 자동 취소 알림.
-                     [판매문서번호] 입력 관련​: 주문 요청 하지 않을건들 대상.
+                     [판매문서번호] 입력 : 주문 요청 하지 않을건들 대상.
   *
   * @tester        : OrderAutoCancelAlarm_ba_ts.cls
   * @reference     :
