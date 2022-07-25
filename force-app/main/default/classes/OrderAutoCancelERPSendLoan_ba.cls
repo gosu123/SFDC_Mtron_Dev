@@ -40,7 +40,7 @@ public with sharing class OrderAutoCancelERPSendLoan_ba implements Database.Batc
 					'AND PurposeOfOrder__c = \'재고보충\' ' +
 					'AND ErpZLNNO__c = NULL ' +
 					'AND Status__c = \'본사 여신 검토\' ' +
-					'AND OrderScheduleDate__c = THIS_MONTH ' +
+					'AND OrderScheduleDate__c <= THIS_MONTH ' +
 					'ORDER BY OrderScheduleDate__c ASC ' +
 					'LIMIT 50 ';
 		}

@@ -43,7 +43,7 @@ public with sharing class OrderAutoCancelAlarmLoan_ba implements Database.Batcha
 					AND PurposeOfOrder__c = '재고보충'
 					AND ErpZLNNO__c = NULL
 					AND Status__c = '본사 여신 검토'
-					AND OrderScheduleDate__c = THIS_MONTH
+					AND OrderScheduleDate__c <= THIS_MONTH
 					ORDER BY OrderScheduleDate__c ASC
 			]);
 		} else {
