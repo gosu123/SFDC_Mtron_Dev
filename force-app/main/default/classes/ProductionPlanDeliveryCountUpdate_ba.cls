@@ -14,7 +14,8 @@
   * ==================================================================================
   * ver     date             author      description
   * ==================================================================================
-  * 1.0     2022-07-03       I2MAx       Create ( ITVOC-2022-06-0861 )
+  * 1.0     2022-07-03       I2MAX       Create ( ITVOC-2022-06-0861 )
+  * 2.0     2022-07-25       I2MAX       UPDATE (ITVOC-2022-07-0906)
 ****************************************************************************************/
 public class ProductionPlanDeliveryCountUpdate_ba implements Database.Batchable<SObject>, Database.Stateful {
 
@@ -63,6 +64,7 @@ public class ProductionPlanDeliveryCountUpdate_ba implements Database.Batchable<
             WHERE Division__c = '공장주문'
             AND ShipmentDate__c >= :processDate.toStartOfMonth()
             AND ShipmentDate__c <= :processDate.addMonths(1).toStartOfMonth().addDays(-1)
+            AND OrderProduct__r.ProductCode IN :productCodes
             GROUP BY OrderProduct__r.ProductCode
         ];
         Map<String, Decimal> deliveryCountMap = new Map<String, Decimal>();
@@ -74,11 +76,35 @@ public class ProductionPlanDeliveryCountUpdate_ba implements Database.Batchable<
             deliveryCountMap.put(productCode, deliveryCount);
         }
 
+        // 주문건수 구하기.
+        List<AggregateResult> orderCountTargets = [
+            SELECT OrderProduct__r.ProductCode productCode, COUNT(Id) deliveryCount
+            FROM Order__c
+            WHERE Division__c = '공장주문'
+            AND Status__c != '종료'
+            AND isOrderCancel__c = FALSE
+            AND VSTEL__c IN ('', 'M')
+            AND OrderProduct__r.ProductCode IN :productCodes
+            GROUP BY OrderProduct__r.ProductCode
+        ];
+        Map<String, Decimal> orderCountMap = new Map<String, Decimal>();
+        for(AggregateResult ar : orderCountTargets) {
+            productCode = (String) ar.get('productCode');
+            deliveryCount = (Decimal) ar.get('deliveryCount');
+            orderCountMap.put(productCode, deliveryCount);
+        }
+
         for(ProductionPlan__c r : scope) {
             if(deliveryCountMap.containsKey(r.ProductCode__c)) {
                 r.DeliveryCount__c = deliveryCountMap.get(r.ProductCode__c);
             } else {
                 r.DeliveryCount__c = 0;
+            }
+            // 주문건수 업데이트 : 종료 안된.
+            if(orderCountMap.containsKey(r.ProductCode__c)) {
+                r.OrderCount__c = orderCountMap.get(r.ProductCode__c);
+            } else {
+                r.OrderCount__c = 0;
             }
         }
 
